@@ -726,186 +726,466 @@ def page_dashboard():
 
 
 def page_workout():
-    st.markdown('<div class="pghead"><div class="pgtitle">Iniciar Treino</div><div class="pgsub">Registre seus sets em tempo real.</div></div>', unsafe_allow_html=True)
+    # ── PAGE CSS ───────────────────────────────────────────────────────────────
+    st.markdown("""
+<style>
+/* ── PRE-WORKOUT PLAN CARDS ───────────────────────── */
+.wk-option-card{
+  background:var(--card);border:2px solid var(--bdr);border-radius:16px;
+  padding:1.2rem 1.4rem;margin-bottom:.6rem;transition:all .18s;
+}
+.wk-option-card.wk-sel{
+  border-color:var(--acc)!important;
+  background:rgba(200,255,0,.04)!important;
+}
+.wk-option-card-title{font-size:1rem;font-weight:800;color:var(--txt);margin-bottom:.35rem;}
+.wk-option-card-meta{font-size:.8rem;color:var(--txt2);display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;}
+.wk-ex-pill{
+  display:inline-block;background:var(--card2);border:1px solid var(--bdr);
+  border-radius:20px;padding:.15rem .6rem;font-size:.72rem;color:var(--txt2);
+}
 
+/* ── ACTIVE WORKOUT HEADER ────────────────────────── */
+.wk-hdr{
+  background:var(--card);border:1px solid var(--bdr);border-radius:16px;
+  padding:1.1rem 1.4rem 1rem;margin-bottom:1rem;
+}
+.wk-hdr-top{display:flex;justify-content:space-between;align-items:flex-start;gap:.75rem;margin-bottom:.85rem;}
+.wk-hdr-name{font-size:1.15rem;font-weight:900;color:var(--txt);letter-spacing:-.3px;line-height:1.2;}
+.wk-hdr-sub{font-size:.8rem;color:var(--txt2);margin-top:.15rem;}
+.wk-stat-chip{
+  display:inline-flex;align-items:center;gap:.35rem;
+  background:var(--card2);border:1px solid var(--bdr);border-radius:20px;
+  padding:.3rem .8rem;font-size:.8rem;font-weight:700;color:var(--txt);
+  white-space:nowrap;
+}
+.wk-stat-chip.green{background:rgba(46,213,115,.1);border-color:rgba(46,213,115,.3);color:#2ed573;}
+.wk-stat-chip.lime{background:rgba(200,255,0,.1);border-color:rgba(200,255,0,.3);color:#c8ff00;}
+.wk-progress-wrap{height:5px;background:var(--card2);border-radius:5px;overflow:hidden;}
+.wk-progress-bar{height:5px;background:linear-gradient(90deg,#c8ff00,#a0cc00);border-radius:5px;transition:width .5s ease;}
+
+/* ── REST TIMER BANNER ────────────────────────────── */
+.rest-banner{
+  background:#0a0a0a;border:2px solid var(--acc);border-radius:14px;
+  padding:.9rem 1.25rem;margin-bottom:.9rem;
+  display:flex;align-items:center;gap:1.2rem;
+  box-shadow:0 0 28px rgba(200,255,0,.12);
+}
+.rest-countdown{
+  font-size:3rem;font-weight:900;color:var(--acc);
+  line-height:1;letter-spacing:-2px;min-width:70px;text-align:center;
+  font-family:'Inter',sans-serif;
+}
+.rest-label{font-size:.68rem;color:var(--txt2);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:.2rem;}
+.rest-exname{font-size:.92rem;font-weight:700;color:var(--txt);}
+.rest-skip{
+  margin-left:auto;background:var(--card2);border:1px solid var(--bdr);
+  color:var(--txt2);border-radius:8px;padding:.4rem .85rem;
+  cursor:pointer;font-size:.8rem;font-weight:600;transition:all .15s;
+  white-space:nowrap;
+}
+.rest-skip:hover{border-color:var(--acc);color:var(--acc);}
+
+/* ── EXERCISE BLOCK ───────────────────────────────── */
+.ex-blk{
+  background:var(--card);border:1px solid var(--bdr);
+  border-radius:14px;margin-bottom:.75rem;overflow:hidden;
+}
+.ex-blk-head{
+  padding:.9rem 1.2rem;background:rgba(255,255,255,.02);
+  border-bottom:1px solid var(--bdr);
+  display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;
+}
+.ex-blk-name{font-size:.98rem;font-weight:800;color:var(--txt);flex:1;min-width:0;}
+.ex-blk-tag{
+  display:inline-flex;align-items:center;gap:.25rem;
+  background:var(--card2);border:1px solid var(--bdr);
+  border-radius:10px;padding:.2rem .6rem;font-size:.73rem;
+  font-weight:600;color:var(--txt2);white-space:nowrap;
+}
+.ex-blk-body{padding:.5rem .6rem .7rem;}
+
+/* ── SET ROW GRID ─────────────────────────────────── */
+.set-col-labels{
+  display:grid;grid-template-columns:28px 1fr 1fr 46px 36px;
+  gap:.4rem;padding:.3rem .4rem .1rem;
+}
+.set-col-lbl{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--txt3);text-align:center;}
+.set-col-lbl:first-child{text-align:left;}
+.set-row-grid{
+  display:grid;grid-template-columns:28px 1fr 1fr 46px 36px;
+  gap:.4rem;align-items:center;padding:.35rem .4rem;
+  border-radius:8px;transition:background .15s;
+}
+.set-row-grid:hover{background:rgba(255,255,255,.02);}
+.set-row-grid.set-done-row{background:rgba(46,213,115,.04);}
+.set-badge{
+  width:24px;height:24px;border-radius:50%;background:var(--card2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.68rem;font-weight:800;color:var(--txt3);flex-shrink:0;
+}
+.set-badge-done{background:rgba(46,213,115,.2)!important;color:#2ed573!important;}
+
+/* ── ADD EX CARD ──────────────────────────────────── */
+.add-ex-card{
+  border:2px dashed var(--bdr);border-radius:14px;
+  padding:1.1rem 1.25rem;margin-bottom:.75rem;
+  background:transparent;transition:border-color .18s;
+}
+.add-ex-card:focus-within{border-color:rgba(200,255,0,.3);}
+
+/* ── MOBILE ───────────────────────────────────────── */
+@media(max-width:768px){
+  .set-col-labels{grid-template-columns:24px 1fr 1fr 42px 30px;gap:.3rem;padding:.3rem .2rem .1rem;}
+  .set-row-grid{grid-template-columns:24px 1fr 1fr 42px 30px;gap:.3rem;padding:.3rem .2rem;}
+  .set-badge{width:20px;height:20px;font-size:.6rem;}
+  .ex-blk-head{padding:.75rem .9rem;gap:.5rem;}
+  .ex-blk-name{font-size:.9rem;}
+  .ex-blk-body{padding:.35rem .3rem .5rem;}
+  .wk-hdr{padding:.9rem 1rem .85rem;}
+  .rest-countdown{font-size:2.5rem;min-width:58px;}
+  .rest-banner{padding:.75rem 1rem;gap:.9rem;}
+  .wk-option-card{padding:1rem 1.1rem;}
+}
+</style>
+""", unsafe_allow_html=True)
+
+    # ── PRE-WORKOUT SELECTION ──────────────────────────────────────────────────
     if st.session_state.workout is None:
+        today_name = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"][date.today().weekday() % 7 if date.today().weekday() < 6 else 0]
+        weekday_idx = date.today().isoweekday()  # 1=Mon…7=Sun
+        day_names = {1:"Segunda",2:"Terça",3:"Quarta",4:"Quinta",5:"Sexta",6:"Sábado",7:"Domingo"}
+        today_label = day_names.get(weekday_idx, "")
+
+        st.markdown(f'<div class="pghead"><div class="pgtitle">Iniciar Treino</div>'
+                    f'<div class="pgsub">📅 {today_label} — Escolha o treino de hoje e vamos!</div></div>',
+                    unsafe_allow_html=True)
+
         plans = get_plans()
-        plan_names = ["Treino Livre", "😴 Dia de Descanso"] + [p["name"] for p in plans]
-        sel = st.selectbox("Selecionar Plano", plan_names)
+        if "wk_sel_name" not in st.session_state:
+            st.session_state.wk_sel_name = None
 
-        if sel == "😴 Dia de Descanso":
-            st.markdown('<div class="card" style="text-align:center;padding:2rem;border-color:rgba(200,255,0,.2);">'
-                        '<div style="font-size:2.5rem;">😴</div>'
-                        '<div style="font-size:1.1rem;font-weight:700;margin:.5rem 0 .25rem;">Dia de Descanso</div>'
-                        '<div style="color:#a8a8a8;font-size:.85rem;">Recuperação é parte do treino.</div>'
-                        '</div>', unsafe_allow_html=True)
-            rest_note = st.text_input("Anotação (opcional)", placeholder="Alongamento, caminhada leve...")
-            if st.button("💾 Registrar Descanso", use_container_width=True):
-                add_session({"id": str(uuid.uuid4()), "date": date.today().isoformat(),
-                             "plan_name": "😴 Descanso", "duration": 0, "exercises": [],
-                             "notes": rest_note})
-                st.success("✅ Dia de descanso registrado!")
-                st.session_state.page = "history"
+        # Special options row
+        sp1, sp2 = st.columns(2)
+        with sp1:
+            is_sel = st.session_state.wk_sel_name == "__livre__"
+            st.markdown(f"""
+            <div class="wk-option-card {'wk-sel' if is_sel else ''}">
+              <div class="wk-option-card-title">🏋️ Treino Livre</div>
+              <div class="wk-option-card-meta">Sem plano pré-definido · adicione exercícios na hora</div>
+            </div>""", unsafe_allow_html=True)
+            if st.button("Selecionar Treino Livre", key="sel_livre", use_container_width=True,
+                         type="primary" if is_sel else "secondary"):
+                st.session_state.wk_sel_name = "__livre__"
                 st.rerun()
-        else:
-            exercises_for_plan = []
-            if sel != "Treino Livre":
-                plan_obj = next((p for p in plans if p["name"] == sel), None)
-                if plan_obj:
-                    exercises_for_plan = plan_obj.get("exercises") or []
 
-            if st.button("🚀 Começar Treino", use_container_width=True):
-                exs = []
-                for e in exercises_for_plan:
-                    sets = [{"weight": float(e.get("weight", 0)), "reps": int(e.get("reps_target", 10)),
-                             "done": False, "rpe": 0}
-                            for _ in range(e.get("sets", 3))]
-                    exs.append({"name": e["name"], "target_sets": e.get("sets", 3),
-                                 "target_reps": str(e.get("reps_target", 10)),
-                                 "rest": e.get("rest", 90), "sets": sets, "notes": ""})
-                st.session_state.workout = {
-                    "plan_name": sel, "start": datetime.now().isoformat(),
-                    "exercises": exs, "notes": "",
-                }
-                st.session_state.rest_end_ts = 0.0
+        with sp2:
+            is_rest = st.session_state.wk_sel_name == "__descanso__"
+            st.markdown(f"""
+            <div class="wk-option-card {'wk-sel' if is_rest else ''}">
+              <div class="wk-option-card-title">😴 Dia de Descanso</div>
+              <div class="wk-option-card-meta">Registrar recuperação ativa ou descanso total</div>
+            </div>""", unsafe_allow_html=True)
+            if st.button("Selecionar Descanso", key="sel_rest", use_container_width=True,
+                         type="primary" if is_rest else "secondary"):
+                st.session_state.wk_sel_name = "__descanso__"
                 st.rerun()
+
+        # Plan cards
+        if plans:
+            st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+            st.markdown('<div class="section-label">Seus Planos</div>', unsafe_allow_html=True)
+            for p in plans:
+                exs = p.get("exercises") or []
+                is_sel = st.session_state.wk_sel_name == p["name"]
+                # Build exercise preview pills (max 4)
+                pills_html = "".join(
+                    f'<span class="wk-ex-pill">{e["name"]}</span>'
+                    for e in exs[:4]
+                )
+                if len(exs) > 4:
+                    pills_html += f'<span class="wk-ex-pill">+{len(exs)-4} mais</span>'
+                total_sets = sum(e.get("sets", 3) for e in exs)
+                st.markdown(f"""
+                <div class="wk-option-card {'wk-sel' if is_sel else ''}">
+                  <div class="wk-option-card-title">{p['name']}</div>
+                  <div class="wk-option-card-meta" style="margin-bottom:.5rem;">
+                    <span>💪 {len(exs)} exercícios</span>
+                    <span>·</span>
+                    <span>📋 {total_sets} séries totais</span>
+                  </div>
+                  <div style="display:flex;flex-wrap:wrap;gap:.3rem;">{pills_html}</div>
+                </div>""", unsafe_allow_html=True)
+                if st.button(f"{'✅ Selecionado' if is_sel else 'Selecionar'} — {p['name']}",
+                             key=f"sel_{p['id']}", use_container_width=True,
+                             type="primary" if is_sel else "secondary"):
+                    st.session_state.wk_sel_name = p["name"]
+                    st.rerun()
+
+        # ── ACTION AREA ────────────────────────────────────────────────────────
+        sel = st.session_state.wk_sel_name
+        if sel:
+            st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+
+            if sel == "__descanso__":
+                rest_note = st.text_input("Anotação (opcional)", placeholder="Alongamento, foam roller, caminhada leve...")
+                if st.button("💾 Registrar Dia de Descanso", use_container_width=True):
+                    add_session({"id": str(uuid.uuid4()), "date": date.today().isoformat(),
+                                 "plan_name": "😴 Descanso", "duration": 0, "exercises": [],
+                                 "notes": rest_note})
+                    st.session_state.wk_sel_name = None
+                    st.success("✅ Dia de descanso registrado!")
+                    st.session_state.page = "history"
+                    st.rerun()
+            else:
+                plan_obj = None if sel == "__livre__" else next((p for p in plans if p["name"] == sel), None)
+                exercises_for_plan = plan_obj.get("exercises", []) if plan_obj else []
+                n_ex = len(exercises_for_plan)
+                total_sets = sum(e.get("sets", 3) for e in exercises_for_plan)
+
+                if sel != "__livre__" and n_ex:
+                    st.markdown(f"""
+                    <div style="background:rgba(200,255,0,.05);border:1px solid rgba(200,255,0,.2);
+                         border-radius:12px;padding:.9rem 1.2rem;margin-bottom:1rem;">
+                      <div style="font-weight:700;color:#c8ff00;font-size:.88rem;margin-bottom:.3rem;">
+                        ⚡ {sel}
+                      </div>
+                      <div style="color:#b0b0b0;font-size:.82rem;">
+                        {n_ex} exercícios · {total_sets} séries · pronto para começar
+                      </div>
+                    </div>""", unsafe_allow_html=True)
+
+                if st.button("🚀 Começar Treino Agora", use_container_width=True):
+                    exs = []
+                    for e in exercises_for_plan:
+                        sets = [{"weight": float(e.get("weight", 0)), "reps": int(e.get("reps_target", 10)),
+                                 "done": False, "rpe": 0}
+                                for _ in range(e.get("sets", 3))]
+                        exs.append({"name": e["name"], "target_sets": e.get("sets", 3),
+                                    "target_reps": str(e.get("reps_target", 10)),
+                                    "rest": e.get("rest", 90), "sets": sets, "notes": ""})
+                    st.session_state.workout = {
+                        "plan_name": sel if sel != "__livre__" else "Treino Livre",
+                        "start": datetime.now().isoformat(),
+                        "exercises": exs, "notes": "",
+                    }
+                    st.session_state.wk_sel_name = None
+                    st.session_state.rest_end_ts = 0.0
+                    st.rerun()
+
+    # ── ACTIVE WORKOUT ─────────────────────────────────────────────────────────
     else:
         w = st.session_state.workout
-        elapsed = (datetime.now() - datetime.fromisoformat(w["start"])).seconds // 60
-        total_sets_done = sum(1 for e in w["exercises"] for s in e["sets"] if s["done"])
+        elapsed   = (datetime.now() - datetime.fromisoformat(w["start"])).seconds // 60
+        done_sets = sum(1 for e in w["exercises"] for s in e["sets"] if s["done"])
         total_sets = sum(len(e["sets"]) for e in w["exercises"])
+        pct = int(done_sets / total_sets * 100) if total_sets else 0
 
-        hc1, hc2, hc3 = st.columns(3)
-        hc1.metric("⏱️ Duração", f"{elapsed} min")
-        hc2.metric("✅ Sets Concluídos", f"{total_sets_done}/{total_sets}")
-        hc3.metric("💪 Exercícios", len(w["exercises"]))
+        # ── HEADER CARD ────────────────────────────────────────────────────────
+        st.markdown(f"""
+        <div class="wk-hdr">
+          <div class="wk-hdr-top">
+            <div>
+              <div class="wk-hdr-name">⚡ {w['plan_name']}</div>
+              <div class="wk-hdr-sub">Treino em andamento</div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:.4rem;justify-content:flex-end;">
+              <span class="wk-stat-chip lime">⏱ {elapsed} min</span>
+              <span class="wk-stat-chip green">✅ {done_sets}/{total_sets} sets</span>
+              <span class="wk-stat-chip">💪 {len(w['exercises'])} exerc.</span>
+            </div>
+          </div>
+          <div class="wk-progress-wrap">
+            <div class="wk-progress-bar" style="width:{pct}%;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:.35rem;">
+            <span style="font-size:.7rem;color:var(--txt3);">Progresso</span>
+            <span style="font-size:.7rem;color:{'#c8ff00' if pct==100 else 'var(--txt3)'};">{pct}%</span>
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
 
-        # ── REST TIMER BANNER ──────────────────────────────────────────────────
+        # ── REST TIMER ─────────────────────────────────────────────────────────
         now_ts = time.time()
         if st.session_state.rest_end_ts > now_ts:
             end_ts_ms = int(st.session_state.rest_end_ts * 1000)
             ex_name   = st.session_state.get("rest_ex_name", "")
             components.html(f"""
-            <div id="rtb" style="background:#0d0d0d;border:2px solid #c8ff00;border-radius:14px;
-              padding:1rem 1.5rem;display:flex;align-items:center;gap:1.5rem;margin-bottom:.5rem;
-              font-family:Inter,sans-serif;">
-              <div style="text-align:center;min-width:70px;">
-                <div id="rcount" style="color:#c8ff00;font-size:2.8rem;font-weight:900;line-height:1;">0</div>
-                <div style="color:#888;font-size:.7rem;text-transform:uppercase;letter-spacing:1px;">seg</div>
+            <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@900&display=swap');
+            *{{box-sizing:border-box;margin:0;padding:0;}}
+            body{{background:transparent;font-family:'Inter',sans-serif;}}
+            .rb{{background:#090909;border:2px solid #c8ff00;border-radius:14px;
+              padding:.85rem 1.2rem;display:flex;align-items:center;gap:1.1rem;
+              box-shadow:0 0 24px rgba(200,255,0,.12);}}
+            #rc{{font-size:2.8rem;font-weight:900;color:#c8ff00;line-height:1;
+              letter-spacing:-2px;min-width:62px;text-align:center;transition:color .2s;}}
+            .rl{{font-size:.65rem;color:#888;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:.2rem;}}
+            .rn{{font-size:.88rem;font-weight:700;color:#e0e0e0;}}
+            .rs{{margin-left:auto;background:#1a1a1a;border:1px solid #333;color:#888;
+              border-radius:8px;padding:.4rem .85rem;cursor:pointer;font-size:.78rem;
+              font-weight:600;transition:all .15s;}}
+            .rs:hover{{border-color:#c8ff00;color:#c8ff00;}}
+            .prog{{height:3px;background:#1a1a1a;border-radius:3px;margin-top:.7rem;overflow:hidden;}}
+            .progf{{height:3px;background:#c8ff00;border-radius:3px;transition:width .8s linear;}}
+            </style>
+            <div class="rb" id="rb">
+              <div>
+                <div id="rc">--</div>
+                <div style="font-size:.6rem;color:#666;text-align:center;margin-top:.1rem;">SEG</div>
               </div>
-              <div style="flex:1;">
-                <div style="color:#888;font-size:.72rem;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:.2rem;">Descanso</div>
-                <div style="color:#e0e0e0;font-size:.9rem;font-weight:600;">{ex_name}</div>
+              <div style="flex:1;min-width:0;">
+                <div class="rl">Descansando</div>
+                <div class="rn">{ex_name}</div>
+                <div class="prog"><div class="progf" id="pf" style="width:100%;"></div></div>
               </div>
-              <button onclick="skipRest()" style="background:#1e1e1e;border:1px solid #333;color:#888;
-                border-radius:8px;padding:.4rem .9rem;cursor:pointer;font-size:.8rem;">Pular ⏭</button>
+              <button class="rs" onclick="skip()">Pular ⏭</button>
             </div>
             <script>
-            const endTs={end_ts_ms};
-            const el=document.getElementById('rcount');
+            const END={end_ts_ms};
+            let totalRem=Math.max(1,Math.ceil((END-Date.now())/1000));
+            const el=document.getElementById('rc'),pf=document.getElementById('pf');
             let done=false;
             function tick(){{
-              const rem=Math.max(0,Math.ceil((endTs-Date.now())/1000));
+              const rem=Math.max(0,Math.ceil((END-Date.now())/1000));
               el.textContent=rem;
-              const pct=rem/((endTs-Date.now()+rem*1000)/1000);
+              pf.style.width=((rem/totalRem)*100)+'%';
               el.style.color=rem<=5?'#ff4757':'#c8ff00';
+              pf.style.background=rem<=5?'#ff4757':'#c8ff00';
               if(rem>0){{setTimeout(tick,250);}}
-              else if(!done){{done=true;beep();document.getElementById('rtb').style.opacity='.4';}}
+              else if(!done){{done=true;beep();document.getElementById('rb').style.opacity='.45';}}
             }}
-            function beep(){{try{{const a=new AudioContext();const o=a.createOscillator();
-              o.connect(a.destination);o.frequency.value=880;o.start();o.stop(a.currentTime+0.3);
+            function beep(){{try{{
+              const a=new AudioContext();
+              const o=a.createOscillator();o.connect(a.destination);
+              o.frequency.value=880;o.start();o.stop(a.currentTime+0.25);
               setTimeout(()=>{{const o2=a.createOscillator();o2.connect(a.destination);
-              o2.frequency.value=1100;o2.start();o2.stop(a.currentTime+0.25);}},350);}}catch(e){{}}}}
-            function skipRest(){{document.getElementById('rtb').style.display='none';}}
+                o2.frequency.value=1100;o2.start();o2.stop(a.currentTime+0.2);}},300);
+            }}catch(e){{}}}}
+            function skip(){{document.getElementById('rb').style.display='none';}}
             tick();
             </script>
-            """, height=110)
+            """, height=115)
 
-        st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
-
-        with st.expander("➕ Adicionar Exercício"):
+        # ── ADD EXERCISE ────────────────────────────────────────────────────────
+        with st.expander("➕ Adicionar exercício ao treino"):
             names = ex_names()
             ex_pick = st.selectbox("Exercício", names, key="wk_add_ex")
-            c1, c2, c3 = st.columns(3)
-            n_sets = c1.number_input("Sets", 1, 20, 3, key="wk_add_sets")
-            reps_t = c2.number_input("Reps alvo", 1, 50, 10, key="wk_add_reps")
-            rest_t = c3.number_input("Descanso (s)", 30, 300, 90, key="wk_add_rest")
-            w_t = st.number_input("Peso (kg)", 0.0, 500.0, 0.0, 2.5, key="wk_add_w")
-            if st.button("Adicionar"):
+            ca, cb, cc_ = st.columns(3)
+            n_sets = ca.number_input("Sets", 1, 20, 3, key="wk_add_sets")
+            reps_t = cb.number_input("Reps alvo", 1, 50, 10, key="wk_add_reps")
+            rest_t = cc_.number_input("Descanso (s)", 30, 300, 90, key="wk_add_rest")
+            w_t = st.number_input("Peso inicial (kg)", 0.0, 500.0, 0.0, 2.5, key="wk_add_w")
+            if st.button("➕ Adicionar ao Treino", use_container_width=True):
                 sets = [{"weight": w_t, "reps": reps_t, "done": False, "rpe": 0} for _ in range(n_sets)]
                 w["exercises"].append({"name": ex_pick, "target_sets": n_sets,
                     "target_reps": str(reps_t), "rest": rest_t, "sets": sets, "notes": ""})
                 st.rerun()
 
+        st.markdown('<div style="height:.5rem;"></div>', unsafe_allow_html=True)
+
+        # ── EXERCISE BLOCKS ─────────────────────────────────────────────────────
         def _start_rest(ei, si):
-            key = f"d_{ei}_{si}"
-            if st.session_state.get(key):   # just checked as done
-                ex = st.session_state.workout["exercises"][ei]
-                rest_secs = ex.get("rest", 90)
-                st.session_state.rest_end_ts  = time.time() + rest_secs
-                st.session_state.rest_ex_name = ex["name"]
+            if st.session_state.get(f"d_{ei}_{si}"):
+                ex_ = st.session_state.workout["exercises"][ei]
+                st.session_state.rest_end_ts  = time.time() + ex_.get("rest", 90)
+                st.session_state.rest_ex_name = ex_["name"]
 
         for ei, ex in enumerate(w["exercises"]):
-            with st.expander(f"**{ex['name']}** — {len(ex['sets'])} sets · alvo: {ex['target_reps']} reps", expanded=True):
-                st.markdown(
-                    "<div style='display:grid;grid-template-columns:40px 1fr 1fr 1fr 60px 50px;"
-                    "gap:.4rem;align-items:center;padding:.3rem 0;"
-                    "font-size:.72rem;color:#909090;text-transform:uppercase;letter-spacing:1px;'>"
-                    "<div></div><div>Peso(kg)</div><div>Reps</div><div>RPE</div><div>Feito</div><div></div>"
-                    "</div>", unsafe_allow_html=True)
-                for si, s in enumerate(ex["sets"]):
-                    cc = st.columns([1, 2, 2, 2, 1, 1])
-                    cc[0].markdown(f"<div style='color:#909090;font-size:.82rem;padding-top:.55rem;'>S{si+1}</div>", unsafe_allow_html=True)
-                    w_val  = cc[1].number_input("kg",   0.0, 500.0, float(s["weight"]), 2.5,  key=f"w_{ei}_{si}", label_visibility="collapsed")
-                    r_val  = cc[2].number_input("reps", 0,   100,   int(s["reps"]),           key=f"r_{ei}_{si}", label_visibility="collapsed")
-                    rpe_val= cc[3].number_input("RPE",  0,   10,    int(s.get("rpe", 0)),      key=f"rpe_{ei}_{si}", label_visibility="collapsed")
-                    done   = cc[4].checkbox("✓",  value=s["done"], key=f"d_{ei}_{si}",
-                                            on_change=_start_rest, args=(ei, si))
-                    if cc[5].button("⏱", key=f"t_{ei}_{si}", help="Reiniciar descanso"):
-                        st.session_state.rest_end_ts  = time.time() + ex.get("rest", 90)
-                        st.session_state.rest_ex_name = ex["name"]
-                        st.rerun()
-                    s["weight"] = w_val; s["reps"] = r_val; s["done"] = done; s["rpe"] = rpe_val
-                ex["notes"] = st.text_input("Anotações", value=ex.get("notes",""), key=f"note_{ei}", placeholder="Observações...")
+            done_count = sum(1 for s in ex["sets"] if s["done"])
+            all_done   = done_count == len(ex["sets"])
+            head_border = "border-color:rgba(46,213,115,.4);" if all_done else ""
 
+            st.markdown(f"""
+            <div class="ex-blk" style="{head_border}">
+              <div class="ex-blk-head">
+                <div class="ex-blk-name">{ex['name']}</div>
+                <span class="ex-blk-tag">📋 {ex['target_sets']}×{ex['target_reps']} reps</span>
+                <span class="ex-blk-tag">⏱ {ex.get('rest',90)}s</span>
+                {'<span class="ex-blk-tag" style="background:rgba(46,213,115,.12);border-color:rgba(46,213,115,.3);color:#2ed573;">✅ Completo</span>' if all_done else f'<span class="ex-blk-tag">{done_count}/{len(ex["sets"])} sets</span>'}
+              </div>
+            </div>""", unsafe_allow_html=True)
+
+            # Column labels
+            lbl_cols = st.columns([1, 3, 3, 2, 1])
+            lbl_cols[0].markdown('<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#555;padding-left:.25rem;">Set</div>', unsafe_allow_html=True)
+            lbl_cols[1].markdown('<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#555;text-align:center;">Peso (kg)</div>', unsafe_allow_html=True)
+            lbl_cols[2].markdown('<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#555;text-align:center;">Reps</div>', unsafe_allow_html=True)
+            lbl_cols[3].markdown('<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#555;text-align:center;">Feito</div>', unsafe_allow_html=True)
+            lbl_cols[4].markdown('<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#555;text-align:center;">⏱</div>', unsafe_allow_html=True)
+
+            for si, s in enumerate(ex["sets"]):
+                done_this = s["done"]
+                row_cols = st.columns([1, 3, 3, 2, 1])
+
+                # Set number badge
+                badge_style = "background:rgba(46,213,115,.2);color:#2ed573;" if done_this else "background:#222;color:#666;"
+                row_cols[0].markdown(
+                    f'<div style="width:26px;height:26px;border-radius:50%;{badge_style}'
+                    f'display:flex;align-items:center;justify-content:center;'
+                    f'font-size:.7rem;font-weight:800;margin-top:.55rem;">{si+1}</div>',
+                    unsafe_allow_html=True)
+
+                w_val   = row_cols[1].number_input("kg",   0.0, 500.0, float(s["weight"]), 2.5, key=f"w_{ei}_{si}", label_visibility="collapsed")
+                r_val   = row_cols[2].number_input("reps", 0,   100,   int(s["reps"]),          key=f"r_{ei}_{si}", label_visibility="collapsed")
+                done    = row_cols[3].checkbox("✓", value=s["done"], key=f"d_{ei}_{si}",
+                                               on_change=_start_rest, args=(ei, si))
+                if row_cols[4].button("⏱", key=f"t_{ei}_{si}", help="Reiniciar descanso", type="secondary"):
+                    st.session_state.rest_end_ts  = time.time() + ex.get("rest", 90)
+                    st.session_state.rest_ex_name = ex["name"]
+                    st.rerun()
+
+                s["weight"] = w_val
+                s["reps"]   = r_val
+                s["done"]   = done
+
+            # Notes per exercise (compact)
+            ex["notes"] = st.text_input(
+                "Observação do exercício", value=ex.get("notes", ""),
+                key=f"note_{ei}", placeholder="Técnica, sensação, carga usada...",
+                label_visibility="collapsed" if not ex.get("notes") else "visible")
+            st.markdown('<div style="height:.4rem;"></div>', unsafe_allow_html=True)
+
+        # ── WORKOUT NOTES + FINISH ──────────────────────────────────────────────
         st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
-        col_notes, col_finish = st.columns([2, 1])
-        with col_notes:
-            w["notes"] = st.text_area("Anotações do treino", value=w.get("notes",""), height=80, placeholder="Como foi o treino hoje?")
-        with col_finish:
-            st.markdown("<div style='height:1.6rem'></div>", unsafe_allow_html=True)
-            if st.button("🏁 Finalizar Treino", use_container_width=True):
+        w["notes"] = st.text_area(
+            "📝 Como foi o treino?", value=w.get("notes", ""), height=90,
+            placeholder="Anotações gerais: energia, foco, volume, PRs...")
+
+        st.markdown('<div style="height:.5rem;"></div>', unsafe_allow_html=True)
+
+        fin1, fin2 = st.columns([3, 1])
+        with fin1:
+            if st.button("🏁 Finalizar e Salvar Treino", use_container_width=True):
                 dur = (datetime.now() - datetime.fromisoformat(w["start"])).seconds // 60
                 try:
                     add_session({
-                        "id": str(uuid.uuid4()),
-                        "date": w["start"][:10],
-                        "plan_name": w["plan_name"],
-                        "duration": dur,
-                        "exercises": w["exercises"],
-                        "notes": w.get("notes", ""),
+                        "id": str(uuid.uuid4()), "date": w["start"][:10],
+                        "plan_name": w["plan_name"], "duration": dur,
+                        "exercises": w["exercises"], "notes": w.get("notes", ""),
                     })
                     st.session_state.workout = None
                     st.session_state.rest_end_ts = 0.0
-                    st.success("✅ Treino salvo!")
+                    st.success(f"🎉 Treino de {dur} min salvo com sucesso!")
                     st.session_state.page = "history"
                     st.rerun()
                 except Exception as e:
                     st.error(f"Erro ao salvar: {e}")
-            # Confirm cancel
+
+        with fin2:
             if not st.session_state.get("confirm_cancel_workout"):
-                if st.button("❌ Cancelar", use_container_width=True, type="secondary"):
+                if st.button("Cancelar", use_container_width=True, type="secondary"):
                     st.session_state.confirm_cancel_workout = True
                     st.rerun()
             else:
-                st.warning("Perderá o treino atual. Tem certeza?")
-                cc1, cc2 = st.columns(2)
-                if cc1.button("Sim, cancelar", use_container_width=True, type="secondary"):
+                st.warning("Perderá o treino. Tem certeza?")
+                ya, na = st.columns(2)
+                if ya.button("Sim", use_container_width=True, type="secondary"):
                     st.session_state.workout = None
                     st.session_state.rest_end_ts = 0.0
                     st.session_state.confirm_cancel_workout = False
                     st.rerun()
-                if cc2.button("Continuar", use_container_width=True):
+                if na.button("Não", use_container_width=True):
                     st.session_state.confirm_cancel_workout = False
                     st.rerun()
 
