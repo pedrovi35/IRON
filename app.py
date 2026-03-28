@@ -1147,12 +1147,26 @@ def page_workout():
             rest_t = cc_.number_input("Descanso (s)", 30, 300, 90, key="wk_add_rest")
             w_t = st.number_input("Peso inicial (kg)", 0.0, 500.0, 0.0, 2.5, key="wk_add_w")
             if st.button("➕ Adicionar ao Treino", use_container_width=True):
+                new_ei = len(w["exercises"])
                 sets = [{"weight": w_t, "reps": reps_t, "done": False, "rpe": 0} for _ in range(n_sets)]
                 w["exercises"].append({"name": ex_pick, "target_sets": n_sets,
                     "target_reps": str(reps_t), "rest": rest_t, "sets": sets, "notes": ""})
-                st.rerun()
+                # Pré-inicializa os keys do novo exercício para evitar conflito no próximo render
+                for _si in range(n_sets):
+                    st.session_state[f"w_{new_ei}_{_si}"] = float(w_t)
+                    st.session_state[f"r_{new_ei}_{_si}"] = int(reps_t)
 
         st.markdown('<div style="height:.5rem;"></div>', unsafe_allow_html=True)
+
+        # ── PRÉ-INICIALIZA session_state dos inputs (evita conflito value= vs key=) ─
+        for _ei, _ex in enumerate(w["exercises"]):
+            for _si, _s in enumerate(_ex["sets"]):
+                wk = f"w_{_ei}_{_si}"
+                rk = f"r_{_ei}_{_si}"
+                if wk not in st.session_state:
+                    st.session_state[wk] = float(_s["weight"])
+                if rk not in st.session_state:
+                    st.session_state[rk] = int(_s["reps"])
 
         # ── EXERCISE BLOCKS ─────────────────────────────────────────────────────
         for ei, ex in enumerate(w["exercises"]):
@@ -1190,28 +1204,28 @@ def page_workout():
                     f'font-size:.7rem;font-weight:800;margin-top:.55rem;">{si+1}</div>',
                     unsafe_allow_html=True)
 
-                w_val = row_cols[1].number_input("kg",   0.0, 500.0, float(s["weight"]), 2.5, key=f"w_{ei}_{si}", label_visibility="collapsed")
-                r_val = row_cols[2].number_input("reps", 0,   100,   int(s["reps"]),          key=f"r_{ei}_{si}", label_visibility="collapsed")
+                # Sem value= aqui — o estado já foi inicializado acima, evitando o
+                # conflito que causava reset dos campos a cada rerun.
+                w_val = row_cols[1].number_input("kg",   0.0, 500.0, step=2.5, key=f"w_{ei}_{si}", label_visibility="collapsed")
+                r_val = row_cols[2].number_input("reps", 0,   100,   step=1,   key=f"r_{ei}_{si}", label_visibility="collapsed")
 
-                # Big done button — tap to mark/unmark
+                # Botão grande — sem st.rerun() explícito: o click já dispara rerun
                 btn_label = "✅ Feito" if done_this else "◯ Marcar"
                 if row_cols[3].button(btn_label, key=f"d_{ei}_{si}",
                                       type="primary" if done_this else "secondary",
                                       use_container_width=True):
+                    s["done"]   = not done_this
                     s["weight"] = w_val
                     s["reps"]   = r_val
-                    s["done"]   = not done_this
-                    if not done_this:  # acabou de marcar como feito → inicia descanso
+                    if not done_this:
                         st.session_state.rest_end_ts  = time.time() + ex.get("rest", 90)
                         st.session_state.rest_ex_name = ex["name"]
-                    st.rerun()
 
                 if row_cols[4].button("⏱", key=f"t_{ei}_{si}", help="Reiniciar descanso", type="secondary"):
                     st.session_state.rest_end_ts  = time.time() + ex.get("rest", 90)
                     st.session_state.rest_ex_name = ex["name"]
-                    st.rerun()
 
-                # Always keep weight/reps in sync
+                # Sincroniza peso/reps com o que está nos inputs
                 s["weight"] = w_val
                 s["reps"]   = r_val
 
