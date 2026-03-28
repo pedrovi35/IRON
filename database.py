@@ -39,6 +39,10 @@ def delete_plan(plan_id: str):
     _db().table("plans").delete().eq("id", plan_id).execute()
     get_plans.clear()
 
+def update_plan(plan_id: str, plan: dict):
+    _db().table("plans").update(plan).eq("id", plan_id).execute()
+    get_plans.clear()
+
 # ── SESSIONS (histórico) ──────────────────────────────────────────────────────
 @st.cache_data(ttl=60)
 def get_sessions():
@@ -46,6 +50,10 @@ def get_sessions():
 
 def add_session(session: dict):
     _db().table("sessions").insert(session).execute()
+    get_sessions.clear()
+
+def delete_session(session_id: str):
+    _db().table("sessions").delete().eq("id", session_id).execute()
     get_sessions.clear()
 
 # ── MEASUREMENTS ──────────────────────────────────────────────────────────────

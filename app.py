@@ -1,13 +1,13 @@
 import streamlit as st
-import json, math, random, uuid, time
+import json, math, random, uuid, time, csv, io
 from datetime import datetime, date, timedelta
 import streamlit.components.v1 as components
 from agents import render_agents_page, get_groq_client, GROQ_MODEL
 from automation_engine import start_scheduler, get_pending_notifications
 
 from database import (
-    get_plans, add_plan, delete_plan,
-    get_sessions, add_session,
+    get_plans, add_plan, delete_plan, update_plan,
+    get_sessions, add_session, delete_session,
     get_measurements, add_measurement,
     get_goals, add_goal, update_goal_current, delete_goal,
     get_nutrition, add_nutrition, delete_nutrition,
@@ -173,6 +173,8 @@ _ss_defaults = {
     "history_page": 0,         # pagination index for history
     "wk_coach_history": [],    # chat history for in-workout AI coach
     "wk_coach_q_counter": 0,  # counter to reset input field
+    "wk_celebrated": False,
+    "wk_new_pr": "",
 }
 for k, v in _ss_defaults.items():
     if k not in st.session_state:
@@ -458,7 +460,7 @@ h4{font-size:1rem!important;font-weight:600!important;}
 """, unsafe_allow_html=True)
 
 # ── CONNECTION CHECK ──────────────────────────────────────────────────────────
-@st.cache_data(ttl=30)
+@st.cache_data(ttl=300)
 def check_connection():
     try:
         from database import get_sb
@@ -543,6 +545,10 @@ _mob_pages = [
     ("📋", "plans",     "Planos"),
     ("🍽️", "nutrition", "Dieta"),
     ("🎯", "goals",     "Metas"),
+    ("🏆", "records",   "PRs"),
+    ("📏", "measurements", "Medidas"),
+    ("🧮", "calculators", "Calc"),
+    ("⏱️", "timer",    "Timer"),
 ]
 _cur_page = st.session_state.get("page", "dashboard")
 
@@ -668,7 +674,7 @@ def page_dashboard():
     c4.metric("💪 Volume Semana", f"{week_vol:,.0f} kg")
 
     st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
-    col1, col2 = st.columns([2, 1])
+    col1, col2 = st.columns([3, 2])
 
     with col1:
         st.markdown("#### 📈 Treinos nos Últimos 30 Dias")
@@ -1036,6 +1042,8 @@ def page_workout():
                         "start": datetime.now().isoformat(),
                         "exercises": exs, "notes": "",
                     }
+                    st.session_state.wk_celebrated = False
+                    st.session_state.wk_new_pr = ""
                     st.session_state.wk_sel_name = None
                     st.session_state.rest_end_ts = 0.0
                     st.rerun()
@@ -1043,10 +1051,24 @@ def page_workout():
     # ── ACTIVE WORKOUT ─────────────────────────────────────────────────────────
     else:
         w = st.session_state.workout
+        # ── BUILD PR MAP ────────────────────────────────────────────────────────
+        _hist_sessions = get_sessions()
+        _pr_map = {}
+        for _hs in _hist_sessions:
+            for _hex in (_hs.get("exercises") or []):
+                _hnm = _hex["name"]
+                for _hs2 in (_hex.get("sets") or []):
+                    if _hs2.get("done") and _hs2.get("weight", 0) > 0:
+                        _hrm1 = _hs2["weight"] * (1 + _hs2.get("reps", 1) / 30)
+                        if _hnm not in _pr_map or _hrm1 > _pr_map[_hnm]:
+                            _pr_map[_hnm] = _hrm1
         elapsed   = (datetime.now() - datetime.fromisoformat(w["start"])).seconds // 60
         done_sets = sum(1 for e in w["exercises"] for s in e["sets"] if s["done"])
         total_sets = sum(len(e["sets"]) for e in w["exercises"])
         pct = int(done_sets / total_sets * 100) if total_sets else 0
+        if pct == 100 and not st.session_state.wk_celebrated:
+            st.session_state.wk_celebrated = True
+            st.balloons()
 
         # ── HEADER CARD ────────────────────────────────────────────────────────
         st.markdown(f"""
@@ -1071,6 +1093,26 @@ def page_workout():
           </div>
         </div>
         """, unsafe_allow_html=True)
+
+        # ── PR BANNER ───────────────────────────────────────────────────────────
+        if st.session_state.wk_new_pr:
+            _pr_cols = st.columns([8, 1])
+            with _pr_cols[0]:
+                st.markdown(f"""
+                <div style="background:linear-gradient(135deg,rgba(255,215,0,.15),rgba(255,140,0,.1));
+                            border:2px solid #ffd700;border-radius:14px;padding:.85rem 1.25rem;
+                            margin-bottom:.75rem;display:flex;align-items:center;gap:1rem;">
+                  <div style="font-size:2rem;">🏆</div>
+                  <div>
+                    <div style="color:#ffd700;font-weight:800;font-size:1rem;">NOVO RECORDE PESSOAL!</div>
+                    <div style="color:#e0e0e0;font-size:.85rem;margin-top:.1rem;">{st.session_state.wk_new_pr}</div>
+                  </div>
+                </div>""", unsafe_allow_html=True)
+            with _pr_cols[1]:
+                st.markdown("<div style='height:.6rem'></div>", unsafe_allow_html=True)
+                if st.button("✕", key="close_pr_banner", type="secondary"):
+                    st.session_state.wk_new_pr = ""
+                    st.rerun()
 
         # ── REST TIMER ─────────────────────────────────────────────────────────
         now_ts = time.time()
@@ -1185,16 +1227,17 @@ def page_workout():
             </div>""", unsafe_allow_html=True)
 
             # Column labels
-            lbl_cols = st.columns([1, 3, 3, 4, 1])
+            lbl_cols = st.columns([1, 3, 3, 3, 1, 1])
             lbl_cols[0].markdown('<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#555;padding-left:.25rem;">Set</div>', unsafe_allow_html=True)
             lbl_cols[1].markdown('<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#555;text-align:center;">Peso (kg)</div>', unsafe_allow_html=True)
             lbl_cols[2].markdown('<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#555;text-align:center;">Reps</div>', unsafe_allow_html=True)
             lbl_cols[3].markdown('<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#555;text-align:center;"></div>', unsafe_allow_html=True)
-            lbl_cols[4].markdown('<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#555;text-align:center;">⏱</div>', unsafe_allow_html=True)
+            lbl_cols[4].markdown('<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#555;text-align:center;">↑</div>', unsafe_allow_html=True)
+            lbl_cols[5].markdown('<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#555;text-align:center;">⏱</div>', unsafe_allow_html=True)
 
             for si, s in enumerate(ex["sets"]):
                 done_this = s["done"]
-                row_cols = st.columns([1, 3, 3, 4, 1])
+                row_cols = st.columns([1, 3, 3, 3, 1, 1])
 
                 # Set number badge
                 badge_style = "background:rgba(46,213,115,.2);color:#2ed573;" if done_this else "background:#222;color:#666;"
@@ -1218,10 +1261,23 @@ def page_workout():
                     s["weight"] = w_val
                     s["reps"]   = r_val
                     if not done_this:
+                        if w_val > 0 and r_val > 0:
+                            _new_rm1 = w_val * (1 + r_val / 30)
+                            _hist_pr = _pr_map.get(ex["name"], 0)
+                            if _new_rm1 > _hist_pr:
+                                st.session_state.wk_new_pr = ex["name"]
                         st.session_state.rest_end_ts  = time.time() + ex.get("rest", 90)
                         st.session_state.rest_ex_name = ex["name"]
 
-                if row_cols[4].button("⏱", key=f"t_{ei}_{si}", help="Reiniciar descanso", type="secondary"):
+                if si > 0:
+                    prev_s = ex["sets"][si - 1]
+                    if row_cols[4].button("↑", key=f"rep_{ei}_{si}", type="secondary",
+                                          help="Copiar set anterior"):
+                        st.session_state[f"w_{ei}_{si}"] = float(prev_s["weight"])
+                        st.session_state[f"r_{ei}_{si}"] = int(prev_s["reps"])
+                        st.rerun()
+
+                if row_cols[5].button("⏱", key=f"t_{ei}_{si}", help="Reiniciar descanso", type="secondary"):
                     st.session_state.rest_end_ts  = time.time() + ex.get("rest", 90)
                     st.session_state.rest_ex_name = ex["name"]
 
@@ -1254,6 +1310,8 @@ def page_workout():
                         "plan_name": w["plan_name"], "duration": dur,
                         "exercises": w["exercises"], "notes": w.get("notes", ""),
                     })
+                    st.session_state.wk_celebrated = False
+                    st.session_state.wk_new_pr = ""
                     st.session_state.workout = None
                     st.session_state.rest_end_ts = 0.0
                     st.success(f"🎉 Treino de {dur} min salvo com sucesso!")
@@ -1271,6 +1329,8 @@ def page_workout():
                 st.warning("Perderá o treino. Tem certeza?")
                 ya, na = st.columns(2)
                 if ya.button("Sim", use_container_width=True, type="secondary"):
+                    st.session_state.wk_celebrated = False
+                    st.session_state.wk_new_pr = ""
                     st.session_state.workout = None
                     st.session_state.rest_end_ts = 0.0
                     st.session_state.confirm_cancel_workout = False
@@ -1291,20 +1351,49 @@ def page_plans():
             st.markdown('<div class="card" style="text-align:center;color:#909090;padding:3rem;">Nenhum plano criado ainda.</div>', unsafe_allow_html=True)
         for plan in plans:
             with st.expander(f"**{plan['name']}** — {len(plan.get('exercises') or [])} exercícios"):
-                for ex in (plan.get("exercises") or []):
-                    st.markdown(f"""
-                    <div class="set-row">
-                      <div style="flex:1;font-weight:600;">{ex['name']}</div>
-                      <span class="badge badge-a">{ex.get('sets',3)}×{ex.get('reps_target',10)}</span>
-                      <span class="badge badge-g">{ex.get('weight',0)} kg</span>
-                      <span class="badge badge-y">⏱ {ex.get('rest',90)}s</span>
-                    </div>""", unsafe_allow_html=True)
+                edit_key = f"edit_{plan['id']}"
                 conf_key = f"confirm_del_plan_{plan['id']}"
-                if not st.session_state.get(conf_key):
-                    if st.button("🗑️ Deletar Plano", key=f"del_{plan['id']}", type="secondary"):
-                        st.session_state[conf_key] = True
+
+                if st.session_state.get(edit_key):
+                    ep_key = f"ep_exs_{plan['id']}"
+                    if ep_key not in st.session_state:
+                        st.session_state[ep_key] = list(plan.get("exercises") or [])
+                    ep_exs = st.session_state[ep_key]
+                    new_name = st.text_input("Nome do Plano", value=plan["name"], key=f"en_{plan['id']}")
+                    st.markdown("#### Exercícios")
+                    for i, ex in enumerate(ep_exs):
+                        ec1, ec2, ec3, ec4 = st.columns([5, 1, 1, 1])
+                        ec1.markdown(f"""<div class="set-row" style="margin-bottom:0;">
+                          <div style="flex:1;font-weight:600;">{ex['name']}</div>
+                          <span class="badge badge-a">{ex.get('sets',3)}×{ex.get('reps_target',10)}</span>
+                          <span class="badge badge-g">{ex.get('weight',0)} kg</span>
+                          </div>""", unsafe_allow_html=True)
+                        if ec2.button("↑", key=f"ep_up_{plan['id']}_{i}", type="secondary", disabled=(i == 0)):
+                            ep_exs.insert(i - 1, ep_exs.pop(i))
+                            st.rerun()
+                        if ec3.button("↓", key=f"ep_dn_{plan['id']}_{i}", type="secondary", disabled=(i == len(ep_exs) - 1)):
+                            ep_exs.insert(i + 1, ep_exs.pop(i))
+                            st.rerun()
+                        if ec4.button("✕", key=f"ep_rm_{plan['id']}_{i}", type="secondary"):
+                            ep_exs.pop(i)
+                            st.rerun()
+                    st.markdown('<div style="height:.5rem"></div>', unsafe_allow_html=True)
+                    sc1, sc2 = st.columns(2)
+                    if sc1.button("💾 Salvar Alterações", key=f"ep_save_{plan['id']}"):
+                        try:
+                            update_plan(plan["id"], {"name": new_name, "exercises": ep_exs})
+                            st.session_state.pop(edit_key, None)
+                            st.session_state.pop(ep_key, None)
+                            st.success("✅ Plano atualizado!")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(str(e))
+                    if sc2.button("❌ Cancelar", key=f"ep_cancel_{plan['id']}", type="secondary"):
+                        st.session_state.pop(edit_key, None)
+                        st.session_state.pop(ep_key, None)
                         st.rerun()
-                else:
+
+                elif st.session_state.get(conf_key):
                     st.warning(f"Deletar **{plan['name']}**? Não pode ser desfeito.")
                     cc1, cc2 = st.columns(2)
                     if cc1.button("✅ Confirmar", key=f"conf_yes_{plan['id']}"):
@@ -1313,6 +1402,33 @@ def page_plans():
                         st.rerun()
                     if cc2.button("❌ Cancelar", key=f"conf_no_{plan['id']}", type="secondary"):
                         st.session_state.pop(conf_key, None)
+                        st.rerun()
+
+                else:
+                    for ex in (plan.get("exercises") or []):
+                        st.markdown(f"""
+                        <div class="set-row">
+                          <div style="flex:1;font-weight:600;">{ex['name']}</div>
+                          <span class="badge badge-a">{ex.get('sets',3)}×{ex.get('reps_target',10)}</span>
+                          <span class="badge badge-g">{ex.get('weight',0)} kg</span>
+                          <span class="badge badge-y">⏱ {ex.get('rest',90)}s</span>
+                        </div>""", unsafe_allow_html=True)
+                    st.markdown('<div style="height:.5rem"></div>', unsafe_allow_html=True)
+                    ac1, ac2, ac3 = st.columns(3)
+                    if ac1.button("✏️ Editar", key=f"edit_btn_{plan['id']}", type="secondary"):
+                        st.session_state[edit_key] = True
+                        st.session_state[f"ep_exs_{plan['id']}"] = list(plan.get("exercises") or [])
+                        st.rerun()
+                    if ac2.button("📋 Duplicar", key=f"dup_{plan['id']}", type="secondary"):
+                        try:
+                            add_plan({"id": str(uuid.uuid4()), "name": f"Cópia de {plan['name']}",
+                                      "exercises": list(plan.get("exercises") or [])})
+                            st.success("✅ Plano duplicado!")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(str(e))
+                    if ac3.button("🗑️ Deletar", key=f"del_{plan['id']}", type="secondary"):
+                        st.session_state[conf_key] = True
                         st.rerun()
 
     with tab2:
@@ -1344,12 +1460,19 @@ def page_plans():
         if st.session_state.new_plan_ex:
             st.markdown("#### Exercícios do Plano")
             for i, ex in enumerate(st.session_state.new_plan_ex):
-                col1, col2 = st.columns([4, 1])
+                col1, col2, col3, col4 = st.columns([4, 1, 1, 1])
                 col1.markdown(f"""<div class="set-row"><div style="flex:1;font-weight:600;">{ex['name']}</div>
                   <span class="badge badge-a">{ex['sets']}×{ex['reps_target']}</span>
                   <span class="badge badge-g">{ex['weight']} kg</span>
                   <span class="badge badge-y">⏱ {ex.get('rest',90)}s</span></div>""", unsafe_allow_html=True)
-                if col2.button("✕", key=f"rm_{i}", type="secondary"):
+                if col2.button("↑", key=f"np_up_{i}", type="secondary", disabled=(i == 0)):
+                    st.session_state.new_plan_ex.insert(i - 1, st.session_state.new_plan_ex.pop(i))
+                    st.rerun()
+                if col3.button("↓", key=f"np_dn_{i}", type="secondary",
+                               disabled=(i == len(st.session_state.new_plan_ex) - 1)):
+                    st.session_state.new_plan_ex.insert(i + 1, st.session_state.new_plan_ex.pop(i))
+                    st.rerun()
+                if col4.button("✕", key=f"rm_{i}", type="secondary"):
                     st.session_state.new_plan_ex.pop(i)
                     st.rerun()
 
@@ -1442,7 +1565,7 @@ def page_history():
     search_hist = fc1.text_input("🔍 Buscar plano", placeholder="Nome do treino...", key="hist_search")
     all_plan_names = sorted({s.get("plan_name","") for s in sessions if s.get("plan_name")})
     plan_filter = fc2.selectbox("Filtrar por plano", ["Todos"] + all_plan_names, key="hist_plan")
-    date_options = ["Todos os tempos","Última semana","Último mês","Últimos 3 meses"]
+    date_options = ["Todos os tempos","Última semana","Último mês","Últimos 3 meses","Período customizado"]
     date_filter = fc3.selectbox("Período", date_options, key="hist_period")
 
     today = date.today()
@@ -1454,10 +1577,32 @@ def page_history():
         filtered = [s for s in filtered if search_hist.lower() in (s.get("plan_name","")).lower()]
     if plan_filter != "Todos":
         filtered = [s for s in filtered if s.get("plan_name") == plan_filter]
-    if date_filter in cutoffs:
+    if date_filter == "Período customizado":
+        _dc1, _dc2 = st.columns(2)
+        _custom_start = _dc1.date_input("De", value=today - timedelta(days=30), key="hist_custom_start")
+        _custom_end = _dc2.date_input("Até", value=today, key="hist_custom_end")
+        filtered = [s for s in filtered if _custom_start <= date.fromisoformat(str(s["date"])[:10]) <= _custom_end]
+    elif date_filter in cutoffs:
         filtered = [s for s in filtered if date.fromisoformat(str(s["date"])[:10]) >= cutoffs[date_filter]]
 
     st.markdown(f"<div style='color:#909090;font-size:.8rem;margin:.5rem 0 1rem;'>{len(filtered)} treino(s)</div>", unsafe_allow_html=True)
+
+    if filtered:
+        _csv_buf = io.StringIO()
+        _csv_writer = csv.writer(_csv_buf)
+        _csv_writer.writerow(["Data", "Plano", "Duração (min)", "Exercícios", "Volume Total (kg)", "Notas"])
+        for _s in filtered:
+            _d = str(_s["date"])[:10]
+            _vol = sum(
+                _s2.get("weight", 0) * _s2.get("reps", 0)
+                for _e in (_s.get("exercises") or [])
+                for _s2 in (_e.get("sets") or [])
+                if _s2.get("done")
+            )
+            _csv_writer.writerow([_d, _s.get("plan_name", ""), _s.get("duration", 0),
+                                  len(_s.get("exercises") or []), f"{_vol:.0f}", _s.get("notes", "")])
+        st.download_button("📥 Exportar CSV", _csv_buf.getvalue(),
+                           f"ironlog_{today}.csv", "text/csv")
 
     # ── Pagination ────────────────────────────────────────────────────────────
     PAGE_SIZE = 15
@@ -1499,6 +1644,22 @@ def page_history():
                                     f"<span>{s2.get('weight',0)} kg × {s2.get('reps',0)} reps{rpe_txt}</span></div>", unsafe_allow_html=True)
                 if s.get("notes"):
                     st.markdown(f"<div style='color:#a8a8a8;font-size:.85rem;font-style:italic;'>📝 {s['notes']}</div>", unsafe_allow_html=True)
+            st.markdown('<div style="height:.5rem"></div>', unsafe_allow_html=True)
+            _del_sess_key = f"confirm_del_sess_{s['id']}"
+            if not st.session_state.get(_del_sess_key):
+                if st.button("🗑️ Deletar treino", key=f"del_s_{s['id']}", type="secondary"):
+                    st.session_state[_del_sess_key] = True
+                    st.rerun()
+            else:
+                st.warning("Deletar este treino? Esta ação não pode ser desfeita.")
+                _dsc1, _dsc2 = st.columns(2)
+                if _dsc1.button("✅ Confirmar", key=f"del_sc_{s['id']}"):
+                    delete_session(s["id"])
+                    st.session_state.pop(_del_sess_key, None)
+                    st.rerun()
+                if _dsc2.button("❌ Cancelar", key=f"del_sn_{s['id']}", type="secondary"):
+                    st.session_state.pop(_del_sess_key, None)
+                    st.rerun()
 
     # Pagination controls
     if total_pages > 1:
@@ -1525,17 +1686,36 @@ def page_progress():
         st.info("Nenhum treino registrado.")
         return
 
-    ex_data = {}
+    ex_data_raw = {}
     for s in sessions:
         d = str(s["date"])[:10]
         for ex in (s.get("exercises") or []):
             nm = ex["name"]
             for s2 in (ex.get("sets") or []):
                 if s2.get("done") and s2.get("weight", 0) > 0:
-                    ex_data.setdefault(nm, []).append({"date": d, "weight": s2["weight"], "reps": s2["reps"]})
+                    if nm not in ex_data_raw:
+                        ex_data_raw[nm] = {}
+                    prev = ex_data_raw[nm].get(d, {"weight": 0, "reps": 0})
+                    if s2["weight"] > prev["weight"]:
+                        ex_data_raw[nm][d] = {"weight": s2["weight"], "reps": s2.get("reps", 0)}
+    ex_data = {
+        nm: sorted([{"date": d, "weight": v["weight"], "reps": v["reps"]}
+                    for d, v in dates_d.items()], key=lambda x: x["date"])
+        for nm, dates_d in ex_data_raw.items()
+    }
 
     if not ex_data:
-        st.info("Complete treinos para ver o progresso.")
+        st.markdown("""
+        <div class="card" style="text-align:center;padding:3rem;">
+          <div style="font-size:3rem;margin-bottom:1rem;">📊</div>
+          <div style="font-weight:700;font-size:1.1rem;margin-bottom:.5rem;">Nenhum dado de progresso ainda</div>
+          <div style="color:#909090;font-size:.9rem;margin-bottom:1.5rem;">
+            Complete treinos com pesos registrados para ver sua evolução aqui.
+          </div>
+        </div>""", unsafe_allow_html=True)
+        if st.button("🚀 Ir para Treinos", use_container_width=True):
+            st.session_state.page = "workout"
+            st.rerun()
         return
 
     tab1, tab2 = st.tabs(["💪 Por Exercício", "📊 Volume Semanal"])
