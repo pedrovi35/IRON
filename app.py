@@ -22,7 +22,19 @@ try:
 except ImportError:
     HAS_PLOTLY = False
 
-st.set_page_config(page_title="IRONLOG", page_icon="⚡", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="IRONLOG — Treino com IA", page_icon="⚡", layout="wide", initial_sidebar_state="collapsed")
+
+# ── SEO / META TAGS ───────────────────────────────────────────────────────────
+st.markdown("""
+<meta name="description" content="IRONLOG — Registre treinos, acompanhe progresso e receba coaching com IA. O seu diário de academia inteligente.">
+<meta name="keywords" content="treino, academia, musculação, fitness, diário de treino, coach IA, progresso, nutrição">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<meta name="theme-color" content="#080808">
+<meta property="og:title" content="IRONLOG — Seu Parceiro de Treino com IA">
+<meta property="og:description" content="Registre treinos, acompanhe progresso e receba coaching personalizado com inteligência artificial.">
+<meta property="og:type" content="website">
+<meta name="robots" content="index, follow">
+""", unsafe_allow_html=True)
 
 # ── EXERCISE DB ───────────────────────────────────────────────────────────────
 DB = {
@@ -171,152 +183,275 @@ st.markdown("""
 
 #MainMenu,footer,header,.stDeployButton{visibility:hidden!important;display:none!important;}
 
+/* ── DESIGN TOKENS ─────────────────────────────────── */
 :root{
-  --bg:#080808;--bg2:#111;--card:#161616;--card2:#1e1e1e;
+  --bg:#080808;--bg2:#111;--card:#181818;--card2:#222;
   --acc:#c8ff00;--acc2:#ff4757;--acc3:#2ed573;--warn:#ffa502;
-  --txt:#f0f0f0;--txt2:#888;--bdr:#252525;
+  --txt:#f0f0f0;--txt2:#b0b0b0;--txt3:#6a6a6a;--bdr:#2a2a2a;
+  --radius:14px;--radius-sm:10px;
+  --shadow:0 2px 12px rgba(0,0,0,.45);
 }
 
-.stApp{background:var(--bg)!important;font-family:'Inter',sans-serif!important;}
-.main .block-container{padding:1.5rem 2.5rem!important;max-width:100%!important;}
+/* ── BASE ──────────────────────────────────────────── */
+.stApp{
+  background:var(--bg)!important;
+  font-family:'Inter',sans-serif!important;
+  font-size:15px;
+  line-height:1.6;
+  color:var(--txt);
+  -webkit-text-size-adjust:100%;
+}
+.main .block-container{padding:1.5rem 2.5rem 4rem!important;max-width:100%!important;}
+*{box-sizing:border-box;}
 
-[data-testid="stSidebar"]{background:#0a0a0a!important;border-right:1px solid var(--bdr)!important;}
+/* ── SIDEBAR ───────────────────────────────────────── */
+[data-testid="stSidebar"]{background:#0d0d0d!important;border-right:1px solid var(--bdr)!important;}
 [data-testid="stSidebar"] *{color:var(--txt)!important;}
 [data-testid="stSidebar"] .stButton button{
   background:transparent!important;color:var(--txt2)!important;
   border:none!important;text-align:left!important;padding:10px 14px!important;
-  border-radius:8px!important;font-size:.875rem!important;font-weight:500!important;
-  transition:all .15s!important;width:100%!important;
+  border-radius:8px!important;font-size:.9rem!important;font-weight:500!important;
+  transition:all .15s!important;width:100%!important;letter-spacing:0!important;
 }
 [data-testid="stSidebar"] .stButton button:hover{
-  background:rgba(200,255,0,.08)!important;color:var(--acc)!important;
+  background:rgba(200,255,0,.08)!important;color:var(--acc)!important;transform:none!important;box-shadow:none!important;
 }
 
-h1,h2,h3,h4{color:var(--txt)!important;font-family:'Inter',sans-serif!important;}
+/* ── HEADINGS ──────────────────────────────────────── */
+h1,h2,h3,h4,h5,h6{color:var(--txt)!important;font-family:'Inter',sans-serif!important;line-height:1.3!important;}
+h2{font-size:1.25rem!important;font-weight:700!important;}
+h3{font-size:1.1rem!important;font-weight:600!important;}
+h4{font-size:1rem!important;font-weight:600!important;}
 
+/* ── INPUTS ────────────────────────────────────────── */
 .stTextInput input,.stNumberInput input,.stTextArea textarea{
   background:var(--card)!important;border:1px solid var(--bdr)!important;
-  color:var(--txt)!important;border-radius:10px!important;font-family:'Inter',sans-serif!important;
+  color:var(--txt)!important;border-radius:var(--radius-sm)!important;
+  font-family:'Inter',sans-serif!important;font-size:15px!important;
+  transition:border-color .15s,box-shadow .15s!important;
 }
-.stTextInput input:focus,.stNumberInput input:focus{border-color:var(--acc)!important;box-shadow:0 0 0 2px rgba(200,255,0,.15)!important;}
+.stTextInput input:focus,.stNumberInput input:focus,.stTextArea textarea:focus{
+  border-color:var(--acc)!important;box-shadow:0 0 0 3px rgba(200,255,0,.12)!important;outline:none!important;
+}
+.stTextInput label,.stNumberInput label,.stTextArea label,.stSelectbox label{
+  color:var(--txt2)!important;font-size:.85rem!important;font-weight:500!important;margin-bottom:.3rem!important;
+}
 
-.stSelectbox [data-baseweb="select"]{background:var(--card)!important;border-color:var(--bdr)!important;}
-.stSelectbox [data-baseweb="select"] *{background:var(--card)!important;color:var(--txt)!important;}
-.stSelectbox [data-baseweb="popover"] *{background:#1a1a1a!important;color:var(--txt)!important;}
+/* ── SELECTBOX ─────────────────────────────────────── */
+.stSelectbox [data-baseweb="select"]{background:var(--card)!important;border-color:var(--bdr)!important;border-radius:var(--radius-sm)!important;}
+.stSelectbox [data-baseweb="select"] *{background:var(--card)!important;color:var(--txt)!important;font-size:15px!important;}
+.stSelectbox [data-baseweb="popover"] *{background:#1c1c1c!important;color:var(--txt)!important;}
 
+/* ── BUTTONS ───────────────────────────────────────── */
 .stButton button{
-  background:linear-gradient(135deg,var(--acc),#a0cc00)!important;
-  color:#000!important;border:none!important;border-radius:10px!important;
-  font-weight:700!important;font-size:14px!important;padding:.55rem 1.5rem!important;
-  transition:all .2s!important;letter-spacing:.3px!important;
+  background:linear-gradient(135deg,var(--acc),#b0e800)!important;
+  color:#000!important;border:none!important;border-radius:var(--radius-sm)!important;
+  font-weight:700!important;font-size:.9rem!important;padding:.6rem 1.5rem!important;
+  transition:all .18s ease!important;letter-spacing:.2px!important;
+  min-height:44px!important;
 }
-.stButton button:hover{transform:translateY(-1px)!important;box-shadow:0 4px 20px rgba(200,255,0,.25)!important;}
+.stButton button:hover{
+  transform:translateY(-1px)!important;
+  box-shadow:0 6px 24px rgba(200,255,0,.3)!important;
+}
+.stButton button:active{transform:translateY(0)!important;}
 .stButton button[kind="secondary"]{
   background:var(--card)!important;color:var(--txt)!important;
   border:1px solid var(--bdr)!important;
 }
-.stButton button[kind="secondary"]:hover{border-color:var(--acc)!important;color:var(--acc)!important;box-shadow:none!important;}
+.stButton button[kind="secondary"]:hover{
+  border-color:var(--acc)!important;color:var(--acc)!important;
+  box-shadow:none!important;transform:none!important;
+}
 
+/* ── METRICS ───────────────────────────────────────── */
 [data-testid="metric-container"]{
   background:var(--card)!important;border:1px solid var(--bdr)!important;
-  border-radius:14px!important;padding:1.25rem!important;
+  border-radius:var(--radius)!important;padding:1.25rem!important;
+  transition:border-color .15s!important;
 }
-[data-testid="metric-container"] label{color:var(--txt2)!important;font-size:.8rem!important;text-transform:uppercase;letter-spacing:1px;}
-[data-testid="stMetricValue"]{color:var(--txt)!important;font-weight:800!important;font-size:1.8rem!important;}
+[data-testid="metric-container"]:hover{border-color:#3a3a3a!important;}
+[data-testid="metric-container"] label{
+  color:var(--txt2)!important;font-size:.78rem!important;
+  text-transform:uppercase;letter-spacing:1.2px;font-weight:600!important;
+}
+[data-testid="stMetricValue"]{color:var(--txt)!important;font-weight:800!important;font-size:1.75rem!important;}
+[data-testid="stMetricDelta"]{font-size:.8rem!important;}
 
-.stTabs [data-baseweb="tab-list"]{background:transparent!important;border-bottom:1px solid var(--bdr)!important;gap:0;}
-.stTabs [data-baseweb="tab"]{color:var(--txt2)!important;background:transparent!important;border:none!important;font-weight:600!important;padding:.7rem 1.25rem!important;}
+/* ── TABS ──────────────────────────────────────────── */
+.stTabs [data-baseweb="tab-list"]{
+  background:transparent!important;border-bottom:1px solid var(--bdr)!important;
+  gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.stTabs [data-baseweb="tab-list"]::-webkit-scrollbar{display:none;}
+.stTabs [data-baseweb="tab"]{
+  color:var(--txt2)!important;background:transparent!important;border:none!important;
+  font-weight:600!important;padding:.75rem 1.25rem!important;white-space:nowrap;
+  font-size:.88rem!important;transition:color .15s!important;
+}
 .stTabs [aria-selected="true"]{color:var(--acc)!important;border-bottom:2px solid var(--acc)!important;}
+.stTabs [data-baseweb="tab"]:hover{color:var(--txt)!important;}
 
-.stProgress>div>div{background:var(--acc)!important;}
-.stProgress>div{background:var(--card)!important;}
+/* ── PROGRESS ──────────────────────────────────────── */
+.stProgress>div>div{background:var(--acc)!important;border-radius:4px!important;}
+.stProgress>div{background:var(--card2)!important;border-radius:4px!important;}
 
-.streamlit-expanderHeader{background:var(--card)!important;border:1px solid var(--bdr)!important;border-radius:10px!important;color:var(--txt)!important;}
-.streamlit-expanderContent{background:var(--card2)!important;border:1px solid var(--bdr)!important;border-top:none!important;}
+/* ── EXPANDER ──────────────────────────────────────── */
+.streamlit-expanderHeader{
+  background:var(--card)!important;border:1px solid var(--bdr)!important;
+  border-radius:var(--radius-sm)!important;color:var(--txt)!important;
+  font-weight:600!important;font-size:.9rem!important;
+  padding:1rem 1.25rem!important;
+}
+.streamlit-expanderContent{
+  background:var(--card2)!important;border:1px solid var(--bdr)!important;
+  border-top:none!important;border-radius:0 0 var(--radius-sm) var(--radius-sm)!important;
+  padding:1rem 1.25rem!important;
+}
 
+/* ── SCROLLBAR ─────────────────────────────────────── */
 ::-webkit-scrollbar{width:5px;height:5px;}
 ::-webkit-scrollbar-track{background:var(--bg);}
-::-webkit-scrollbar-thumb{background:#2a2a2a;border-radius:3px;}
+::-webkit-scrollbar-thumb{background:#333;border-radius:4px;}
 ::-webkit-scrollbar-thumb:hover{background:var(--acc);}
 
-.card{background:var(--card);border:1px solid var(--bdr);border-radius:16px;padding:1.5rem;margin-bottom:1rem;}
-.pghead{margin-bottom:2rem;}
-.pgtitle{font-size:2.2rem;font-weight:900;color:var(--txt);letter-spacing:-1px;line-height:1.1;}
-.pgsub{color:var(--txt2);font-size:.9rem;margin-top:.3rem;}
-.badge{display:inline-block;padding:.2rem .65rem;border-radius:20px;font-size:.72rem;font-weight:700;letter-spacing:.3px;}
-.badge-g{background:rgba(46,213,115,.12);color:#2ed573;border:1px solid rgba(46,213,115,.3);}
-.badge-y{background:rgba(255,165,2,.12);color:#ffa502;border:1px solid rgba(255,165,2,.3);}
-.badge-r{background:rgba(255,71,87,.12);color:#ff4757;border:1px solid rgba(255,71,87,.3);}
-.badge-a{background:rgba(200,255,0,.12);color:#c8ff00;border:1px solid rgba(200,255,0,.3);}
-.divider{height:1px;background:var(--bdr);margin:1.25rem 0;}
-.set-row{display:flex;align-items:center;gap:1rem;padding:.7rem 1rem;background:var(--card2);border-radius:10px;margin-bottom:.5rem;border:1px solid var(--bdr);}
-.set-done{border-color:rgba(46,213,115,.4)!important;background:rgba(46,213,115,.04)!important;}
-.ex-chip{display:inline-block;background:var(--card2);border:1px solid var(--bdr);border-radius:20px;padding:.25rem .7rem;margin:.15rem;font-size:.78rem;color:var(--txt2);}
-.quote-box{border-left:3px solid var(--acc);padding:.75rem 1.25rem;background:rgba(200,255,0,.04);border-radius:0 10px 10px 0;}
-.pr-tag{background:linear-gradient(135deg,#ffd700,#ff8c00);color:#000;padding:.15rem .5rem;border-radius:12px;font-size:.68rem;font-weight:800;letter-spacing:.5px;}
-.db-badge{display:inline-flex;align-items:center;gap:.4rem;background:rgba(46,213,115,.1);border:1px solid rgba(46,213,115,.3);color:#2ed573;border-radius:20px;padding:.3rem .9rem;font-size:.78rem;font-weight:700;}
+/* ── CUSTOM COMPONENTS ─────────────────────────────── */
+.card{
+  background:var(--card);border:1px solid var(--bdr);
+  border-radius:var(--radius);padding:1.5rem;margin-bottom:1rem;
+  transition:border-color .2s;
+}
+.card:hover{border-color:#383838;}
 
-/* ── MOBILE RESPONSIVENESS ────────────────────────────── */
-@media (max-width: 768px) {
-  /* Core layout */
-  .main .block-container{padding:.75rem .6rem 2rem!important;}
+.pghead{margin-bottom:1.75rem;}
+.pgtitle{font-size:clamp(1.5rem,5vw,2rem);font-weight:900;color:var(--txt);letter-spacing:-1px;line-height:1.1;}
+.pgsub{color:var(--txt2);font-size:.95rem;margin-top:.4rem;line-height:1.5;}
+
+.section-label{
+  font-size:.75rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:1.5px;color:var(--txt3);margin-bottom:.75rem;
+}
+
+.badge{display:inline-block;padding:.25rem .7rem;border-radius:20px;font-size:.72rem;font-weight:700;letter-spacing:.3px;}
+.badge-g{background:rgba(46,213,115,.15);color:#2ed573;border:1px solid rgba(46,213,115,.35);}
+.badge-y{background:rgba(255,165,2,.15);color:#ffa502;border:1px solid rgba(255,165,2,.35);}
+.badge-r{background:rgba(255,71,87,.15);color:#ff4757;border:1px solid rgba(255,71,87,.35);}
+.badge-a{background:rgba(200,255,0,.14);color:#c8ff00;border:1px solid rgba(200,255,0,.35);}
+
+.divider{height:1px;background:var(--bdr);margin:1.25rem 0;}
+
+.set-row{
+  display:flex;align-items:center;gap:1rem;padding:.75rem 1rem;
+  background:var(--card2);border-radius:var(--radius-sm);margin-bottom:.5rem;
+  border:1px solid var(--bdr);transition:border-color .15s;
+}
+.set-row:hover{border-color:#3a3a3a;}
+.set-done{border-color:rgba(46,213,115,.4)!important;background:rgba(46,213,115,.05)!important;}
+
+.ex-chip{
+  display:inline-block;background:var(--card2);border:1px solid var(--bdr);
+  border-radius:20px;padding:.3rem .8rem;margin:.2rem;
+  font-size:.8rem;color:var(--txt2);line-height:1.4;
+}
+
+.quote-box{
+  border-left:3px solid var(--acc);padding:.9rem 1.25rem;
+  background:rgba(200,255,0,.04);border-radius:0 12px 12px 0;
+  font-style:italic;color:var(--txt);font-size:.95rem;line-height:1.6;
+}
+
+.pr-tag{
+  background:linear-gradient(135deg,#ffd700,#ff8c00);color:#000;
+  padding:.2rem .55rem;border-radius:12px;font-size:.68rem;font-weight:800;letter-spacing:.5px;
+}
+
+.db-badge{
+  display:inline-flex;align-items:center;gap:.4rem;
+  background:rgba(46,213,115,.1);border:1px solid rgba(46,213,115,.3);
+  color:#2ed573;border-radius:20px;padding:.35rem 1rem;
+  font-size:.8rem;font-weight:700;
+}
+
+/* Info text — better contrast than raw #888 */
+.info-text{color:var(--txt2);font-size:.9rem;line-height:1.6;}
+.muted{color:var(--txt3);font-size:.82rem;}
+
+/* ── MOBILE RESPONSIVENESS ─────────────────────────── */
+@media (max-width:768px) {
+  /* Core layout — extra bottom padding for bottom nav */
+  .main .block-container{padding:.75rem .75rem 5.5rem!important;}
+  .stApp{font-size:15px;}
 
   /* Page header */
-  .pgtitle{font-size:1.6rem!important;letter-spacing:-.5px!important;}
-  .pgsub{font-size:.8rem!important;}
+  .pgtitle{font-size:1.55rem!important;letter-spacing:-.5px!important;}
+  .pgsub{font-size:.88rem!important;}
   .pghead{margin-bottom:1.25rem!important;}
 
   /* Cards */
-  .card{padding:1rem!important;border-radius:12px!important;}
+  .card{padding:1rem 1.1rem!important;border-radius:12px!important;margin-bottom:.75rem!important;}
 
-  /* Metrics — smaller on mobile */
-  [data-testid="stMetricValue"]{font-size:1.35rem!important;}
-  [data-testid="metric-container"]{padding:.9rem!important;border-radius:10px!important;}
-  [data-testid="metric-container"] label{font-size:.7rem!important;}
+  /* Metrics — 2 per row naturally via Streamlit columns */
+  [data-testid="stMetricValue"]{font-size:1.4rem!important;}
+  [data-testid="metric-container"]{padding:.9rem 1rem!important;border-radius:10px!important;}
+  [data-testid="metric-container"] label{font-size:.72rem!important;letter-spacing:.8px!important;}
 
-  /* Buttons — touch-friendly */
+  /* Buttons — larger touch targets */
   .stButton button{
-    min-height:46px!important;font-size:.85rem!important;
-    padding:.65rem 1rem!important;border-radius:10px!important;
+    min-height:48px!important;font-size:.88rem!important;
+    padding:.7rem 1rem!important;border-radius:10px!important;
   }
 
-  /* Inputs — bigger tap targets */
+  /* Inputs — prevent iOS zoom (must be ≥16px) */
   .stTextInput input,.stNumberInput input,.stTextArea textarea{
-    font-size:16px!important;min-height:44px!important;
+    font-size:16px!important;min-height:46px!important;
   }
-  .stSelectbox [data-baseweb="select"] *{font-size:15px!important;}
+  .stSelectbox [data-baseweb="select"]{min-height:46px!important;}
+  .stSelectbox [data-baseweb="select"] *{font-size:16px!important;}
 
-  /* Set rows in workout page */
-  .set-row{flex-wrap:wrap!important;gap:.5rem!important;padding:.6rem .75rem!important;}
+  /* Tabs — horizontal scroll */
+  .stTabs [data-baseweb="tab"]{padding:.65rem 1rem!important;font-size:.82rem!important;}
 
-  /* Quote box */
-  .quote-box{padding:.6rem 1rem!important;}
+  /* Set rows */
+  .set-row{flex-wrap:wrap!important;gap:.5rem!important;padding:.7rem .8rem!important;}
 
-  /* Sidebar toggle button — make bigger */
+  /* Quote */
+  .quote-box{padding:.75rem 1rem!important;font-size:.9rem!important;}
+
+  /* Sidebar toggle */
   [data-testid="collapsedControl"]{
     top:.5rem!important;left:.5rem!important;
-    width:42px!important;height:42px!important;
-    background:#161616!important;border:1px solid #252525!important;
-    border-radius:10px!important;display:flex!important;
-    align-items:center!important;justify-content:center!important;
+    width:44px!important;height:44px!important;
+    background:#181818!important;border:1px solid #303030!important;
+    border-radius:10px!important;
   }
 
-  /* Radio buttons (tab switcher in agents) */
-  .stRadio [data-testid="stWidgetLabel"]{display:none!important;}
-  .stRadio label{font-size:.8rem!important;padding:.5rem .75rem!important;}
-
-  /* Plotly charts — don't overflow */
-  .js-plotly-plot{max-width:100%!important;}
-
   /* Expanders */
-  .streamlit-expanderHeader{padding:.75rem!important;font-size:.85rem!important;}
+  .streamlit-expanderHeader{padding:.8rem 1rem!important;font-size:.88rem!important;}
+  .streamlit-expanderContent{padding:.75rem 1rem!important;}
+
+  /* Plotly — no overflow */
+  .js-plotly-plot,.plot-container{max-width:100%!important;overflow:hidden!important;}
+
+  /* Divider spacing */
+  .divider{margin:.9rem 0!important;}
+
+  /* Section label */
+  .section-label{font-size:.7rem!important;}
+
+  /* Headings on mobile */
+  h2{font-size:1.1rem!important;}
+  h3{font-size:1rem!important;}
+  h4{font-size:.95rem!important;}
 }
 
-/* ── TABLET tweaks ───────────────────────────────────── */
+/* ── TABLET ────────────────────────────────────────── */
 @media (min-width:769px) and (max-width:1024px) {
-  .main .block-container{padding:1.25rem 1.5rem!important;}
-  .pgtitle{font-size:1.9rem!important;}
+  .main .block-container{padding:1.25rem 1.75rem 3rem!important;}
+  .pgtitle{font-size:1.85rem!important;}
+  [data-testid="stMetricValue"]{font-size:1.6rem!important;}
 }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -357,7 +492,7 @@ with st.sidebar:
     st.markdown("""
     <div style="padding:1.5rem 1rem 1rem;text-align:center;">
       <div style="font-size:1.9rem;font-weight:900;color:#c8ff00;letter-spacing:-1px;">⚡ IRONLOG</div>
-      <div style="font-size:.7rem;color:#444;letter-spacing:2px;text-transform:uppercase;margin-top:.2rem;">Seu parceiro de treino</div>
+      <div style="font-size:.7rem;color:#888;letter-spacing:2px;text-transform:uppercase;margin-top:.2rem;">Seu parceiro de treino</div>
     </div>
     <div style="height:1px;background:#1e1e1e;margin:0 1rem .75rem;"></div>
     """, unsafe_allow_html=True)
@@ -388,60 +523,74 @@ if not conn_ok and st.session_state.page not in ("calculators", "timer"):
     <div class="card" style="border-color:#ff4757;text-align:center;padding:3rem;">
       <div style="font-size:3rem;">🔴</div>
       <div style="font-size:1.5rem;font-weight:800;margin:.75rem 0 .5rem;">Sem conexão com Supabase</div>
-      <div style="color:#888;font-size:.9rem;">{conn_err}</div>
-      <div style="margin-top:1.5rem;color:#666;font-size:.85rem;">
+      <div style="color:#b0b0b0;font-size:.9rem;">{conn_err}</div>
+      <div style="margin-top:1.5rem;color:#a0a0a0;font-size:.85rem;">
         Verifique o arquivo <code>.env</code> e rode o <code>schema.sql</code> no Supabase.
       </div>
     </div>
     """, unsafe_allow_html=True)
     st.stop()
 
-# ── MOBILE QUICK-NAV ROW ─────────────────────────────────────────────────────
-# Visible only on mobile via CSS — 5 icon buttons for most-used pages
+# ── MOBILE QUICK-NAV BAR ─────────────────────────────────────────────────────
+# Shows on mobile only — horizontal scrollable row of icon+label buttons
+_mob_pages = [
+    ("🏠", "dashboard", "Início"),
+    ("🤖", "agents",    "IA"),
+    ("🏋️", "workout",   "Treino"),
+    ("📊", "progress",  "Stats"),
+    ("📋", "plans",     "Planos"),
+    ("🍽️", "nutrition", "Dieta"),
+    ("🎯", "goals",     "Metas"),
+]
+_cur_page = st.session_state.get("page", "dashboard")
+
 st.markdown("""
 <style>
-#mob-nav-wrap{display:none;}
+/* Hide the mob-nav wrapper on desktop */
+.mob-nav-outer{display:none;}
 @media(max-width:768px){
-  #mob-nav-wrap{
-    display:flex!important;gap:.35rem;margin-bottom:.9rem;
-    overflow-x:auto;padding:.1rem 0;-webkit-overflow-scrolling:touch;
+  .mob-nav-outer{
+    display:flex!important;gap:.3rem;margin-bottom:1rem;
+    overflow-x:auto;padding:.15rem .05rem;-webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
   }
-  #mob-nav-wrap::-webkit-scrollbar{display:none;}
+  .mob-nav-outer::-webkit-scrollbar{display:none;}
+  /* Each column inside the nav */
+  .mob-nav-outer [data-testid="column"]{
+    flex:0 0 auto!important;min-width:60px!important;
+  }
+  /* Default button style */
+  .mob-nav-outer .stButton button{
+    background:#1a1a1a!important;color:#7a7a7a!important;
+    border:1px solid #2a2a2a!important;border-radius:10px!important;
+    padding:.4rem .2rem .35rem!important;font-size:.75rem!important;
+    min-height:52px!important;line-height:1.3!important;
+    font-weight:600!important;display:flex!important;
+    flex-direction:column!important;align-items:center!important;
+    gap:.1rem!important;transform:none!important;box-shadow:none!important;
+  }
+  /* Active button */
+  .mob-nav-active .stButton button{
+    background:rgba(200,255,0,.1)!important;color:#c8ff00!important;
+    border-color:rgba(200,255,0,.35)!important;
+  }
 }
 </style>
-<div id="mob-nav-wrap"></div>
 """, unsafe_allow_html=True)
 
-_mob_pages = [("🏠","dashboard"),("🤖","agents"),("🏋️","workout"),
-              ("📊","progress"),("📋","plans"),("🍽️","nutrition"),("🎯","goals")]
-_mob_cols = st.columns(len(_mob_pages))
-for _col, (_icon, _key) in zip(_mob_cols, _mob_pages):
-    _is_active = st.session_state.get("page") == _key
-    _label = f"{_icon}"
+st.markdown('<div class="mob-nav-outer">', unsafe_allow_html=True)
+_mob_btn_cols = st.columns(len(_mob_pages))
+for _col, (_icon, _key, _lbl) in zip(_mob_btn_cols, _mob_pages):
+    _active = _cur_page == _key
     with _col:
-        # wrap in a div that hides on desktop
-        st.markdown(f"""
-        <div class="mob-nav-btn{'-active' if _is_active else ''}">
-        <style>
-        .mob-nav-btn,.mob-nav-btn-active{{display:none;}}
-        @media(max-width:768px){{
-          .mob-nav-btn,.mob-nav-btn-active{{display:block!important;}}
-          .mob-nav-btn .stButton button{{
-            background:#161616!important;color:#888!important;
-            border:1px solid #252525!important;border-radius:10px!important;
-            padding:.55rem .2rem!important;font-size:1.2rem!important;min-height:44px!important;
-          }}
-          .mob-nav-btn-active .stButton button{{
-            background:rgba(200,255,0,.12)!important;color:#c8ff00!important;
-            border:1px solid rgba(200,255,0,.4)!important;border-radius:10px!important;
-            padding:.55rem .2rem!important;font-size:1.2rem!important;min-height:44px!important;
-          }}
-        }}
-        </style>
-        </div>""", unsafe_allow_html=True)
-        if st.button(_label, key=f"mobnav_{_key}", use_container_width=True):
+        if _active:
+            st.markdown('<div class="mob-nav-active">', unsafe_allow_html=True)
+        if st.button(f"{_icon}\n{_lbl}", key=f"mobnav_{_key}", use_container_width=True):
             st.session_state.page = _key
             st.rerun()
+        if _active:
+            st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ── PAGES ─────────────────────────────────────────────────────────────────────
 
@@ -474,7 +623,7 @@ def page_dashboard():
                 <div style="color:#c8ff00;font-weight:700;font-size:.88rem;">
                   Agente Autônomo: {auto_name}
                 </div>
-                <div style="color:#666;font-size:.75rem;margin-top:.2rem;">{ts}</div>
+                <div style="color:#a8a8a8;font-size:.75rem;margin-top:.2rem;">{ts}</div>
               </div>
             </div>""", unsafe_allow_html=True)
         with nc2:
@@ -509,11 +658,12 @@ def page_dashboard():
 
     st.markdown('<div class="pghead"><div class="pgtitle">Dashboard</div><div class="pgsub">Bem-vindo de volta. Vamos treinar? 💪</div></div>', unsafe_allow_html=True)
 
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Treinos Esta Semana", len(week_sessions))
-    c2.metric("Total de Treinos", total_sessions)
-    c3.metric("Sequência Atual", f"{streak} 🔥" if streak > 0 else "0")
-    c4.metric("Volume Semana (kg)", f"{week_vol:,.0f}")
+    c1, c2 = st.columns(2)
+    c1.metric("🗓️ Treinos na Semana", len(week_sessions))
+    c2.metric("📦 Total de Treinos", total_sessions)
+    c3, c4 = st.columns(2)
+    c3.metric("🔥 Sequência Atual", f"{streak} dias" if streak > 0 else "0 dias")
+    c4.metric("💪 Volume Semana", f"{week_vol:,.0f} kg")
 
     st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
     col1, col2 = st.columns([2, 1])
@@ -542,15 +692,15 @@ def page_dashboard():
                 d = date.fromisoformat(str(s["date"])[:10]).strftime("%d/%m/%Y")
                 n_ex = len(s.get("exercises") or [])
                 st.markdown(f"""
-                <div class="card" style="padding:1rem 1.25rem;display:flex;justify-content:space-between;align-items:center;">
-                  <div>
-                    <div style="font-weight:700;color:#f0f0f0;">{s.get("plan_name","Treino Livre")}</div>
-                    <div style="font-size:.8rem;color:#666;margin-top:.2rem;">{d} · {n_ex} exercícios · {s.get("duration",0)} min</div>
+                <div class="card" style="padding:1rem 1.25rem;display:flex;justify-content:space-between;align-items:center;gap:.75rem;">
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-weight:700;color:#f0f0f0;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{s.get("plan_name","Treino Livre")}</div>
+                    <div style="font-size:.82rem;color:#a8a8a8;margin-top:.25rem;">{d} &middot; {n_ex} exercícios &middot; {s.get("duration",0)} min</div>
                   </div>
-                  <span class="badge badge-a">Concluído</span>
+                  <span class="badge badge-a" style="flex-shrink:0;">Concluído</span>
                 </div>""", unsafe_allow_html=True)
         else:
-            st.markdown('<div class="card" style="text-align:center;color:#444;padding:2rem;">Nenhum treino registrado ainda.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="card" style="text-align:center;color:#888;padding:2rem;">Nenhum treino registrado ainda.</div>', unsafe_allow_html=True)
 
     with col2:
         st.markdown("#### 💡 Motivação")
@@ -565,10 +715,10 @@ def page_dashboard():
                 st.markdown(f"""
                 <div class="card" style="padding:.9rem 1.1rem;">
                   <div style="font-weight:700;font-size:.9rem;">{p["name"]}</div>
-                  <div style="color:#666;font-size:.78rem;margin-top:.2rem;">{n} exercícios</div>
+                  <div style="color:#a8a8a8;font-size:.78rem;margin-top:.2rem;">{n} exercícios</div>
                 </div>""", unsafe_allow_html=True)
         else:
-            st.markdown('<div class="card" style="color:#555;font-size:.85rem;text-align:center;">Crie seu primeiro plano!</div>', unsafe_allow_html=True)
+            st.markdown('<div class="card" style="color:#909090;font-size:.85rem;text-align:center;">Crie seu primeiro plano!</div>', unsafe_allow_html=True)
 
         if st.button("▶️ Iniciar Treino Agora", use_container_width=True):
             st.session_state.page = "workout"
@@ -587,7 +737,7 @@ def page_workout():
             st.markdown('<div class="card" style="text-align:center;padding:2rem;border-color:rgba(200,255,0,.2);">'
                         '<div style="font-size:2.5rem;">😴</div>'
                         '<div style="font-size:1.1rem;font-weight:700;margin:.5rem 0 .25rem;">Dia de Descanso</div>'
-                        '<div style="color:#666;font-size:.85rem;">Recuperação é parte do treino.</div>'
+                        '<div style="color:#a8a8a8;font-size:.85rem;">Recuperação é parte do treino.</div>'
                         '</div>', unsafe_allow_html=True)
             rest_note = st.text_input("Anotação (opcional)", placeholder="Alongamento, caminhada leve...")
             if st.button("💾 Registrar Descanso", use_container_width=True):
@@ -641,7 +791,7 @@ def page_workout():
               font-family:Inter,sans-serif;">
               <div style="text-align:center;min-width:70px;">
                 <div id="rcount" style="color:#c8ff00;font-size:2.8rem;font-weight:900;line-height:1;">0</div>
-                <div style="color:#444;font-size:.7rem;text-transform:uppercase;letter-spacing:1px;">seg</div>
+                <div style="color:#888;font-size:.7rem;text-transform:uppercase;letter-spacing:1px;">seg</div>
               </div>
               <div style="flex:1;">
                 <div style="color:#888;font-size:.72rem;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:.2rem;">Descanso</div>
@@ -700,12 +850,12 @@ def page_workout():
                 st.markdown(
                     "<div style='display:grid;grid-template-columns:40px 1fr 1fr 1fr 60px 50px;"
                     "gap:.4rem;align-items:center;padding:.3rem 0;"
-                    "font-size:.72rem;color:#555;text-transform:uppercase;letter-spacing:1px;'>"
+                    "font-size:.72rem;color:#909090;text-transform:uppercase;letter-spacing:1px;'>"
                     "<div></div><div>Peso(kg)</div><div>Reps</div><div>RPE</div><div>Feito</div><div></div>"
                     "</div>", unsafe_allow_html=True)
                 for si, s in enumerate(ex["sets"]):
                     cc = st.columns([1, 2, 2, 2, 1, 1])
-                    cc[0].markdown(f"<div style='color:#555;font-size:.82rem;padding-top:.55rem;'>S{si+1}</div>", unsafe_allow_html=True)
+                    cc[0].markdown(f"<div style='color:#909090;font-size:.82rem;padding-top:.55rem;'>S{si+1}</div>", unsafe_allow_html=True)
                     w_val  = cc[1].number_input("kg",   0.0, 500.0, float(s["weight"]), 2.5,  key=f"w_{ei}_{si}", label_visibility="collapsed")
                     r_val  = cc[2].number_input("reps", 0,   100,   int(s["reps"]),           key=f"r_{ei}_{si}", label_visibility="collapsed")
                     rpe_val= cc[3].number_input("RPE",  0,   10,    int(s.get("rpe", 0)),      key=f"rpe_{ei}_{si}", label_visibility="collapsed")
@@ -768,7 +918,7 @@ def page_plans():
 
     with tab1:
         if not plans:
-            st.markdown('<div class="card" style="text-align:center;color:#555;padding:3rem;">Nenhum plano criado ainda.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="card" style="text-align:center;color:#909090;padding:3rem;">Nenhum plano criado ainda.</div>', unsafe_allow_html=True)
         for plan in plans:
             with st.expander(f"**{plan['name']}** — {len(plan.get('exercises') or [])} exercícios"):
                 for ex in (plan.get("exercises") or []):
@@ -914,7 +1064,7 @@ def page_history():
 
     sessions = get_sessions()
     if not sessions:
-        st.markdown('<div class="card" style="text-align:center;color:#555;padding:3rem;">Nenhum treino registrado ainda.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="card" style="text-align:center;color:#909090;padding:3rem;">Nenhum treino registrado ainda.</div>', unsafe_allow_html=True)
         return
 
     # ── Filters ───────────────────────────────────────────────────────────────
@@ -937,7 +1087,7 @@ def page_history():
     if date_filter in cutoffs:
         filtered = [s for s in filtered if date.fromisoformat(str(s["date"])[:10]) >= cutoffs[date_filter]]
 
-    st.markdown(f"<div style='color:#555;font-size:.8rem;margin:.5rem 0 1rem;'>{len(filtered)} treino(s)</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='color:#909090;font-size:.8rem;margin:.5rem 0 1rem;'>{len(filtered)} treino(s)</div>", unsafe_allow_html=True)
 
     # ── Pagination ────────────────────────────────────────────────────────────
     PAGE_SIZE = 15
@@ -962,7 +1112,7 @@ def page_history():
             if is_rest:
                 st.markdown('<div style="color:#888;font-size:.9rem;padding:.5rem 0;">Dia de recuperação registrado.</div>', unsafe_allow_html=True)
                 if s.get("notes"):
-                    st.markdown(f"<div style='color:#666;font-size:.85rem;font-style:italic;'>📝 {s['notes']}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='color:#a8a8a8;font-size:.85rem;font-style:italic;'>📝 {s['notes']}</div>", unsafe_allow_html=True)
             else:
                 mc1, mc2, mc3 = st.columns(3)
                 mc1.metric("Duração", f"{s.get('duration',0)} min")
@@ -975,10 +1125,10 @@ def page_history():
                     st.markdown(f"<div style='font-weight:700;margin:.75rem 0 .4rem;color:#c8ff00;font-size:.9rem;'>{ex['name']}</div>", unsafe_allow_html=True)
                     for i, s2 in enumerate(sets_done):
                         rpe_txt = f" · RPE {s2.get('rpe',0)}" if s2.get("rpe") else ""
-                        st.markdown(f"<div class='set-row set-done'><span style='color:#666;font-size:.8rem;'>Set {i+1}</span>"
+                        st.markdown(f"<div class='set-row set-done'><span style='color:#a8a8a8;font-size:.8rem;'>Set {i+1}</span>"
                                     f"<span>{s2.get('weight',0)} kg × {s2.get('reps',0)} reps{rpe_txt}</span></div>", unsafe_allow_html=True)
                 if s.get("notes"):
-                    st.markdown(f"<div style='color:#666;font-size:.85rem;font-style:italic;'>📝 {s['notes']}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='color:#a8a8a8;font-size:.85rem;font-style:italic;'>📝 {s['notes']}</div>", unsafe_allow_html=True)
 
     # Pagination controls
     if total_pages > 1:
@@ -987,7 +1137,7 @@ def page_history():
         if pc1.button("← Anterior", disabled=(pg == 0), use_container_width=True, type="secondary"):
             st.session_state.history_page = pg - 1
             st.rerun()
-        pc2.markdown(f"<div style='text-align:center;color:#555;padding:.6rem;'>Página {pg+1} / {total_pages}</div>", unsafe_allow_html=True)
+        pc2.markdown(f"<div style='text-align:center;color:#909090;padding:.6rem;'>Página {pg+1} / {total_pages}</div>", unsafe_allow_html=True)
         if pc3.button("Próxima →", disabled=(pg >= total_pages-1), use_container_width=True, type="secondary"):
             st.session_state.history_page = pg + 1
             st.rerun()
@@ -1221,7 +1371,7 @@ def page_records():
                 for nm, pr in sorted(items, key=lambda x: x[1]["rm1"], reverse=True):
                     st.markdown(f"""
                     <div class="card" style="padding:1rem 1.25rem;display:flex;justify-content:space-between;align-items:center;">
-                      <div><div style="font-weight:700;">{nm}</div><div style="color:#666;font-size:.8rem;">{pr['date']}</div></div>
+                      <div><div style="font-weight:700;">{nm}</div><div style="color:#a8a8a8;font-size:.8rem;">{pr['date']}</div></div>
                       <div style="text-align:right;">
                         <div style="font-size:1.3rem;font-weight:900;">{pr['weight']} kg × {pr['reps']}</div>
                         <span class="pr-tag">1RM ~{pr['rm1']} kg</span>
@@ -1248,7 +1398,7 @@ def page_records():
             rm = round(pr["weight"] * (1 + pr["reps"]/30), 1)
             st.markdown(f"""
             <div class="card" style="padding:.9rem 1.1rem;display:flex;justify-content:space-between;align-items:center;">
-              <div><strong>{pr['exercise']}</strong><div style="color:#666;font-size:.8rem;">{str(pr['date'])[:10]}</div></div>
+              <div><strong>{pr['exercise']}</strong><div style="color:#a8a8a8;font-size:.8rem;">{str(pr['date'])[:10]}</div></div>
               <div style="text-align:right;"><strong>{pr['weight']} kg × {pr['reps']}</strong><div><span class="pr-tag">~{rm} kg</span></div></div>
             </div>""", unsafe_allow_html=True)
 
@@ -1355,8 +1505,8 @@ def page_timer():
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@900&display=swap');
       body{{margin:0;background:transparent;}}
       #wrap{{text-align:center;padding:1rem 0;}}
-      #disp{{font-size:6rem;font-weight:900;color:#c8ff00;font-family:'Inter',sans-serif;letter-spacing:-3px;line-height:1;transition:color .3s;}}
-      #msg{{font-size:.9rem;color:#555;margin:.5rem 0 1.2rem;letter-spacing:1.5px;text-transform:uppercase;}}
+      #disp{{font-size:clamp(3.5rem,15vw,6rem);font-weight:900;color:#c8ff00;font-family:'Inter',sans-serif;letter-spacing:-3px;line-height:1;transition:color .3s;}}
+      #msg{{font-size:.9rem;color:#909090;margin:.5rem 0 1.2rem;letter-spacing:1.5px;text-transform:uppercase;}}
       .btn{{background:linear-gradient(135deg,#c8ff00,#a0cc00);color:#000;border:none;
         border-radius:10px;font-weight:800;font-size:.95rem;padding:.6rem 1.8rem;
         cursor:pointer;margin:.3rem;transition:transform .15s;}}
@@ -1467,7 +1617,7 @@ def page_nutrition():
                     <div><strong>{l['meal']}</strong> <span class="ex-chip">{l['type']}</span></div>
                     <span class="badge badge-a">{l['kcal']} kcal</span>
                   </div>
-                  <div style="font-size:.8rem;color:#666;margin-top:.3rem;">P:{l['prot']}g · C:{l['carb']}g · G:{l['fat']}g</div>
+                  <div style="font-size:.8rem;color:#a8a8a8;margin-top:.3rem;">P:{l['prot']}g · C:{l['carb']}g · G:{l['fat']}g</div>
                 </div>""", unsafe_allow_html=True)
                 if c2.button("🗑️", key=f"del_n_{l['id']}", type="secondary"):
                     delete_nutrition(l["id"]); st.rerun()
@@ -1499,7 +1649,7 @@ def page_goals():
     with tab1:
         goals = get_goals()
         if not goals:
-            st.markdown('<div class="card" style="text-align:center;color:#555;padding:3rem;">Nenhuma meta definida ainda.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="card" style="text-align:center;color:#909090;padding:3rem;">Nenhuma meta definida ainda.</div>', unsafe_allow_html=True)
         for g in goals:
             pct = min(100, int((g.get("current",0)/g["target"])*100)) if g["target"]>0 else 0
             badge_cls = "badge-g" if pct>=100 else ("badge-y" if pct>=50 else "badge-r")
@@ -1509,7 +1659,7 @@ def page_goals():
               <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:.75rem;">
                 <div>
                   <div style="font-weight:700;">{g['name']}</div>
-                  <div style="color:#666;font-size:.8rem;">{g.get('type','')} · Prazo: {str(g.get('deadline','—'))[:10]}</div>
+                  <div style="color:#a8a8a8;font-size:.8rem;">{g.get('type','')} · Prazo: {str(g.get('deadline','—'))[:10]}</div>
                 </div>
                 <span class="badge {badge_cls}">{status}</span>
               </div>

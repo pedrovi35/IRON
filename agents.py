@@ -561,7 +561,7 @@ def run_agent(agent_key: str, user_message: str, history: list,
                   border-radius:8px;margin-bottom:.4rem;font-size:.82rem;">
                   <span style="font-size:1rem;">{icon}</span>
                   <span style="color:#c8ff00;font-weight:600;">{label}</span>
-                  <span style="color:#444;margin-left:auto;font-size:.75rem;">running...</span>
+                  <span style="color:#929292;margin-left:auto;font-size:.75rem;">running...</span>
                 </div>"""
                 tool_placeholder.markdown(tool_display_html, unsafe_allow_html=True)
 
@@ -574,7 +574,7 @@ def run_agent(agent_key: str, user_message: str, history: list,
             if tool_placeholder:
                 # Replace last "running..." with result
                 tool_display_html = tool_display_html.replace(
-                    '<span style="color:#444;margin-left:auto;font-size:.75rem;">running...</span>',
+                    '<span style="color:#929292;margin-left:auto;font-size:.75rem;">running...</span>',
                     f'<span style="color:{status_color};margin-left:auto;font-size:.75rem;">{status_icon} concluído</span>',
                     1
                 )
@@ -689,7 +689,16 @@ def render_agents_page():
     .model-badge{{
       display:inline-flex;align-items:center;gap:.4rem;
       background:#0d0d0d;border:1px solid #2a2a2a;border-radius:20px;
-      padding:.25rem .75rem;font-size:.72rem;color:#555;
+      padding:.25rem .75rem;font-size:.72rem;color:#a0a0a0;
+    }}
+    /* ── MOBILE CHAT ────────────────────────────────────── */
+    @media(max-width:768px){{
+      .chat-bubble-user{{max-width:95%!important;font-size:.88rem!important;padding:.75rem .9rem!important;}}
+      .chat-bubble-ai{{max-width:98%!important;font-size:.88rem!important;padding:.75rem .9rem!important;}}
+      .ai-msg-text{{line-height:1.65!important;}}
+      .agent-header{{padding:1rem!important;margin-bottom:1rem!important;}}
+      .agent-card{{padding:.75rem 1rem!important;}}
+      .tool-chip{{font-size:.72rem!important;padding:.25rem .55rem!important;}}
     }}
     </style>
     """, unsafe_allow_html=True)
@@ -710,7 +719,7 @@ def render_agents_page():
     # ── LEFT PANEL: Agent selector ─────────────────────────────────────────────
     with left:
         st.markdown("""
-        <div style="font-size:.7rem;color:#444;text-transform:uppercase;letter-spacing:2px;margin-bottom:1rem;">
+        <div style="font-size:.7rem;color:#929292;text-transform:uppercase;letter-spacing:2px;margin-bottom:1rem;">
           Selecionar Agente
         </div>""", unsafe_allow_html=True)
 
@@ -719,7 +728,7 @@ def render_agents_page():
             border = ag["color"] if is_active else "#252525"
             glow_css = f"box-shadow:0 0 15px {ag['glow']};" if is_active else ""
             hist_count = len([m for m in st.session_state.ai_history.get(key,[]) if m["role"]=="user"])
-            hist_badge = f'<span style="float:right;background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:.1rem .5rem;font-size:.68rem;color:#555;">{hist_count} msgs</span>' if hist_count else ""
+            hist_badge = f'<span style="float:right;background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:.1rem .5rem;font-size:.68rem;color:#a0a0a0;">{hist_count} msgs</span>' if hist_count else ""
 
             st.markdown(f"""
             <div class="agent-card {'active' if is_active else ''}"
@@ -867,7 +876,7 @@ def render_agents_page():
                 thinking_ph.markdown(f"""
                 <div class="chat-bubble-ai" style="border-left-color:{agent['color']};">
                   <div class="thinking-dots">● ● ●</div>
-                  <div style="color:#444;font-size:.75rem;margin-top:.3rem;">{agent['name']} está processando...</div>
+                  <div style="color:#929292;font-size:.75rem;margin-top:.3rem;">{agent['name']} está processando...</div>
                 </div>""", unsafe_allow_html=True)
 
                 tool_ph = st.empty()
@@ -942,12 +951,12 @@ def render_agents_page():
                 <div style="font-size:1.8rem;">📋</div>
                 <div>
                   <div style="font-size:1.1rem;font-weight:900;color:#c8ff00;">{plan['name']}</div>
-                  <div style="color:#666;font-size:.8rem;margin-top:.15rem;">{len(exercises)} exercícios · aguardando sua aprovação</div>
+                  <div style="color:#a8a8a8;font-size:.8rem;margin-top:.15rem;">{len(exercises)} exercícios · aguardando sua aprovação</div>
                 </div>
               </div>
               <div style="background:#0d0d0d;border:1px solid #1e1e1e;border-radius:10px;
                           padding:.75rem 1rem;margin-bottom:1rem;">
-                {exs_html if exs_html else '<div style="color:#555;font-size:.85rem;">Sem exercícios detalhados.</div>'}
+                {exs_html if exs_html else '<div style="color:#a0a0a0;font-size:.85rem;">Sem exercícios detalhados.</div>'}
               </div>
             </div>""", unsafe_allow_html=True)
 
