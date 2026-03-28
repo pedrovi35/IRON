@@ -2,7 +2,7 @@ import streamlit as st
 import json, math, random, uuid, time
 from datetime import datetime, date, timedelta
 import streamlit.components.v1 as components
-from agents import render_agents_page
+from agents import render_agents_page, get_groq_client, GROQ_MODEL
 from automation_engine import start_scheduler, get_pending_notifications
 
 from database import (
@@ -171,6 +171,8 @@ _ss_defaults = {
     "rest_ex_name": "",        # exercise name for the active rest
     "confirm_action": None,    # {"type": str, "id": str, "label": str}
     "history_page": 0,         # pagination index for history
+    "wk_coach_history": [],    # chat history for in-workout AI coach
+    "wk_coach_q_counter": 0,  # counter to reset input field
 }
 for k, v in _ss_defaults.items():
     if k not in st.session_state:
@@ -725,6 +727,71 @@ def page_dashboard():
             st.rerun()
 
 
+def render_quick_coach(w):
+    """Agente de IA embutido na tela de treino — respostas ultra-rápidas."""
+    exercises_text = []
+    for ex in w["exercises"]:
+        done_s = sum(1 for s in ex["sets"] if s["done"])
+        total_s = len(ex["sets"])
+        exercises_text.append(
+            f"- {ex['name']}: {done_s}/{total_s} sets feitos "
+            f"(alvo: {ex['target_sets']}×{ex['target_reps']} reps)"
+        )
+    workout_ctx = f"Treino: {w['plan_name']}\nExercícios:\n" + "\n".join(exercises_text)
+
+    with st.expander("🤖 Coach IA — Dúvida rápida", expanded=False):
+        # Render previous messages (last 4)
+        for msg in st.session_state.wk_coach_history[-4:]:
+            if msg["role"] == "user":
+                st.markdown(
+                    f'<div style="background:rgba(255,255,255,.05);border-radius:10px;'
+                    f'padding:.5rem .8rem;margin-bottom:.35rem;font-size:.84rem;">'
+                    f'👤 {msg["content"]}</div>',
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.markdown(
+                    f'<div style="background:rgba(200,255,0,.06);border:1px solid rgba(200,255,0,.2);'
+                    f'border-radius:10px;padding:.5rem .8rem;margin-bottom:.35rem;'
+                    f'font-size:.84rem;color:#c8ff00;">'
+                    f'⚡ {msg["content"]}</div>',
+                    unsafe_allow_html=True,
+                )
+
+        question = st.text_input(
+            "coach_q",
+            key=f"wk_coach_q_{st.session_state.wk_coach_q_counter}",
+            label_visibility="collapsed",
+            placeholder="Ex: posso aumentar o peso? substituto para supino?",
+        )
+        if st.button("Perguntar ao Coach", key="wk_coach_send", use_container_width=True) and question.strip():
+            try:
+                client = get_groq_client()
+                system_prompt = (
+                    "Você é um coach de treino pessoal embutido num app de academia. "
+                    "Seja ULTRA-CONCISO — máximo 2 frases curtas. Direto ao ponto. "
+                    f"Contexto do treino:\n{workout_ctx}"
+                )
+                messages = [{"role": "system", "content": system_prompt}]
+                for m in st.session_state.wk_coach_history[-6:]:
+                    messages.append(m)
+                messages.append({"role": "user", "content": question})
+
+                resp = client.chat.completions.create(
+                    model=GROQ_MODEL,
+                    messages=messages,
+                    max_tokens=120,
+                    temperature=0.7,
+                )
+                answer = resp.choices[0].message.content.strip()
+                st.session_state.wk_coach_history.append({"role": "user", "content": question})
+                st.session_state.wk_coach_history.append({"role": "assistant", "content": answer})
+                st.session_state.wk_coach_q_counter += 1
+                st.rerun()
+            except Exception as e:
+                st.error(f"Erro ao chamar IA: {e}")
+
+
 def page_workout():
     # ── PAGE CSS ───────────────────────────────────────────────────────────────
     st.markdown("""
@@ -1067,6 +1134,9 @@ def page_workout():
             </script>
             """, height=115)
 
+        # ── QUICK AI COACH ──────────────────────────────────────────────────────
+        render_quick_coach(w)
+
         # ── ADD EXERCISE ────────────────────────────────────────────────────────
         with st.expander("➕ Adicionar exercício ao treino"):
             names = ex_names()
@@ -1085,12 +1155,6 @@ def page_workout():
         st.markdown('<div style="height:.5rem;"></div>', unsafe_allow_html=True)
 
         # ── EXERCISE BLOCKS ─────────────────────────────────────────────────────
-        def _start_rest(ei, si):
-            if st.session_state.get(f"d_{ei}_{si}"):
-                ex_ = st.session_state.workout["exercises"][ei]
-                st.session_state.rest_end_ts  = time.time() + ex_.get("rest", 90)
-                st.session_state.rest_ex_name = ex_["name"]
-
         for ei, ex in enumerate(w["exercises"]):
             done_count = sum(1 for s in ex["sets"] if s["done"])
             all_done   = done_count == len(ex["sets"])
@@ -1107,16 +1171,16 @@ def page_workout():
             </div>""", unsafe_allow_html=True)
 
             # Column labels
-            lbl_cols = st.columns([1, 3, 3, 2, 1])
+            lbl_cols = st.columns([1, 3, 3, 4, 1])
             lbl_cols[0].markdown('<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#555;padding-left:.25rem;">Set</div>', unsafe_allow_html=True)
             lbl_cols[1].markdown('<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#555;text-align:center;">Peso (kg)</div>', unsafe_allow_html=True)
             lbl_cols[2].markdown('<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#555;text-align:center;">Reps</div>', unsafe_allow_html=True)
-            lbl_cols[3].markdown('<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#555;text-align:center;">Feito</div>', unsafe_allow_html=True)
+            lbl_cols[3].markdown('<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#555;text-align:center;"></div>', unsafe_allow_html=True)
             lbl_cols[4].markdown('<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#555;text-align:center;">⏱</div>', unsafe_allow_html=True)
 
             for si, s in enumerate(ex["sets"]):
                 done_this = s["done"]
-                row_cols = st.columns([1, 3, 3, 2, 1])
+                row_cols = st.columns([1, 3, 3, 4, 1])
 
                 # Set number badge
                 badge_style = "background:rgba(46,213,115,.2);color:#2ed573;" if done_this else "background:#222;color:#666;"
@@ -1126,18 +1190,30 @@ def page_workout():
                     f'font-size:.7rem;font-weight:800;margin-top:.55rem;">{si+1}</div>',
                     unsafe_allow_html=True)
 
-                w_val   = row_cols[1].number_input("kg",   0.0, 500.0, float(s["weight"]), 2.5, key=f"w_{ei}_{si}", label_visibility="collapsed")
-                r_val   = row_cols[2].number_input("reps", 0,   100,   int(s["reps"]),          key=f"r_{ei}_{si}", label_visibility="collapsed")
-                done    = row_cols[3].checkbox("✓", value=s["done"], key=f"d_{ei}_{si}",
-                                               on_change=_start_rest, args=(ei, si))
+                w_val = row_cols[1].number_input("kg",   0.0, 500.0, float(s["weight"]), 2.5, key=f"w_{ei}_{si}", label_visibility="collapsed")
+                r_val = row_cols[2].number_input("reps", 0,   100,   int(s["reps"]),          key=f"r_{ei}_{si}", label_visibility="collapsed")
+
+                # Big done button — tap to mark/unmark
+                btn_label = "✅ Feito" if done_this else "◯ Marcar"
+                if row_cols[3].button(btn_label, key=f"d_{ei}_{si}",
+                                      type="primary" if done_this else "secondary",
+                                      use_container_width=True):
+                    s["weight"] = w_val
+                    s["reps"]   = r_val
+                    s["done"]   = not done_this
+                    if not done_this:  # acabou de marcar como feito → inicia descanso
+                        st.session_state.rest_end_ts  = time.time() + ex.get("rest", 90)
+                        st.session_state.rest_ex_name = ex["name"]
+                    st.rerun()
+
                 if row_cols[4].button("⏱", key=f"t_{ei}_{si}", help="Reiniciar descanso", type="secondary"):
                     st.session_state.rest_end_ts  = time.time() + ex.get("rest", 90)
                     st.session_state.rest_ex_name = ex["name"]
                     st.rerun()
 
+                # Always keep weight/reps in sync
                 s["weight"] = w_val
                 s["reps"]   = r_val
-                s["done"]   = done
 
             # Notes per exercise (compact)
             ex["notes"] = st.text_input(
