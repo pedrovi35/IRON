@@ -22,19 +22,8 @@ try:
 except ImportError:
     HAS_PLOTLY = False
 
-st.set_page_config(page_title="IRONLOG — Treino com IA", page_icon="⚡", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="IRONLOG — Treino com IA", page_icon="⚡", layout="wide", initial_sidebar_state="expanded")
 
-# ── SEO / META TAGS ───────────────────────────────────────────────────────────
-st.markdown("""
-<meta name="description" content="IRONLOG — Registre treinos, acompanhe progresso e receba coaching com IA. O seu diário de academia inteligente.">
-<meta name="keywords" content="treino, academia, musculação, fitness, diário de treino, coach IA, progresso, nutrição">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<meta name="theme-color" content="#080808">
-<meta property="og:title" content="IRONLOG — Seu Parceiro de Treino com IA">
-<meta property="og:description" content="Registre treinos, acompanhe progresso e receba coaching personalizado com inteligência artificial.">
-<meta property="og:type" content="website">
-<meta name="robots" content="index, follow">
-""", unsafe_allow_html=True)
 
 # ── EXERCISE DB ───────────────────────────────────────────────────────────────
 DB = {
@@ -209,16 +198,23 @@ st.markdown("""
 *{box-sizing:border-box;}
 
 /* ── SIDEBAR ───────────────────────────────────────── */
-[data-testid="stSidebar"]{background:#0d0d0d!important;border-right:1px solid var(--bdr)!important;}
+[data-testid="stSidebar"]{
+  background:#0d0d0d!important;border-right:1px solid var(--bdr)!important;
+  min-width:190px!important;max-width:210px!important;
+}
 [data-testid="stSidebar"] *{color:var(--txt)!important;}
 [data-testid="stSidebar"] .stButton button{
-  background:transparent!important;color:var(--txt2)!important;
-  border:none!important;text-align:left!important;padding:10px 14px!important;
-  border-radius:8px!important;font-size:.9rem!important;font-weight:500!important;
-  transition:all .15s!important;width:100%!important;letter-spacing:0!important;
+  background:transparent!important;color:#888!important;
+  border:none!important;text-align:left!important;
+  padding:.55rem .9rem!important;border-radius:8px!important;
+  font-size:.88rem!important;font-weight:500!important;
+  transition:background .15s,color .15s!important;
+  width:100%!important;letter-spacing:0!important;
+  min-height:38px!important;box-shadow:none!important;transform:none!important;
 }
 [data-testid="stSidebar"] .stButton button:hover{
-  background:rgba(200,255,0,.08)!important;color:var(--acc)!important;transform:none!important;box-shadow:none!important;
+  background:rgba(200,255,0,.07)!important;color:#d0d0d0!important;
+  transform:none!important;box-shadow:none!important;
 }
 
 /* ── HEADINGS ──────────────────────────────────────── */
@@ -475,130 +471,86 @@ conn_ok, conn_err = check_connection()
 if conn_ok:
     start_scheduler()
 
+
+# ── WARN IF NO CONNECTION (only block write-heavy pages) ─────────────────────
+_OFFLINE_OK = ("dashboard", "calculators", "timer", "progress", "history",
+               "records", "measurements", "exercises", "goals")
+if not conn_ok:
+    st.markdown(f"""
+    <div style="background:rgba(255,71,87,.07);border:1px solid rgba(255,71,87,.35);
+      border-radius:12px;padding:.75rem 1.25rem;margin-bottom:1rem;display:flex;align-items:center;gap:.75rem;">
+      <span style="font-size:1.2rem;">🔴</span>
+      <div>
+        <span style="font-weight:700;color:#ff4757;font-size:.88rem;">Sem conexão com Supabase</span>
+        <span style="color:#888;font-size:.8rem;margin-left:.5rem;">— algumas funcionalidades indisponíveis</span>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+    if st.session_state.page not in _OFFLINE_OK:
+        st.markdown(f"""
+        <div class="card" style="border-color:#ff4757;text-align:center;padding:3rem;">
+          <div style="font-size:3rem;">🔴</div>
+          <div style="font-size:1.5rem;font-weight:800;margin:.75rem 0 .5rem;">Funcionalidade indisponível offline</div>
+          <div style="color:#b0b0b0;font-size:.9rem;">{conn_err}</div>
+          <div style="margin-top:1.5rem;color:#a0a0a0;font-size:.85rem;">
+            Verifique o arquivo <code>.env</code> e rode o <code>schema.sql</code> no Supabase.
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.stop()
+
 # ── SIDEBAR ───────────────────────────────────────────────────────────────────
-PAGES = [
-    ("🏠","Dashboard","dashboard"),
-    ("🤖","Agentes IA","agents"),
-    ("▶️","Iniciar Treino","workout"),
-    ("📋","Planos de Treino","plans"),
-    ("📚","Exercícios","exercises"),
-    ("📅","Histórico","history"),
-    ("📊","Progresso","progress"),
-    ("📏","Medidas","measurements"),
-    ("🏆","Recordes","records"),
-    ("🧮","Calculadoras","calculators"),
-    ("⏱️","Timer","timer"),
-    ("🥗","Nutrição","nutrition"),
-    ("🎯","Metas","goals"),
+_NAV_PAGES = [
+    ("🏠", "Início",     "dashboard"),
+    ("🤖", "IA Coach",   "agents"),
+    ("🏋️", "Treino",     "workout"),
+    ("📋", "Planos",     "plans"),
+    ("📅", "Histórico",  "history"),
+    ("📊", "Progresso",  "progress"),
+    ("🥗", "Nutrição",   "nutrition"),
+    ("🎯", "Metas",      "goals"),
+    ("🏆", "Recordes",   "records"),
+    ("📏", "Medidas",    "measurements"),
+    ("📚", "Exercícios", "exercises"),
 ]
 
 with st.sidebar:
     st.markdown("""
-    <div style="padding:1.5rem 1rem 1rem;text-align:center;">
-      <div style="font-size:1.9rem;font-weight:900;color:#c8ff00;letter-spacing:-1px;">⚡ IRONLOG</div>
-      <div style="font-size:.7rem;color:#888;letter-spacing:2px;text-transform:uppercase;margin-top:.2rem;">Seu parceiro de treino</div>
+    <div style="padding:1.25rem 1rem .75rem;text-align:center;">
+      <div style="font-size:1.75rem;font-weight:900;color:#c8ff00;letter-spacing:-1px;">⚡ IRONLOG</div>
+      <div style="font-size:.65rem;color:#555;letter-spacing:2px;text-transform:uppercase;margin-top:.15rem;">Coach com IA</div>
     </div>
-    <div style="height:1px;background:#1e1e1e;margin:0 1rem .75rem;"></div>
+    <div style="height:1px;background:#1e1e1e;margin:0 .5rem .5rem;"></div>
     """, unsafe_allow_html=True)
 
-    # DB status
     if conn_ok:
-        st.markdown('<div style="text-align:center;margin-bottom:.75rem;"><span class="db-badge">🟢 Supabase conectado</span></div>', unsafe_allow_html=True)
+        st.markdown('<div style="text-align:center;margin-bottom:.5rem;"><span class="db-badge" style="font-size:.72rem;">🟢 Conectado</span></div>', unsafe_allow_html=True)
     else:
-        st.markdown('<div style="text-align:center;margin-bottom:.75rem;"><span class="badge badge-r">🔴 Sem conexão</span></div>', unsafe_allow_html=True)
+        st.markdown('<div style="text-align:center;margin-bottom:.5rem;"><span class="badge badge-r" style="font-size:.72rem;">🔴 Offline</span></div>', unsafe_allow_html=True)
 
-    for icon, label, key in PAGES:
-        if st.button(f"{icon}  {label}", key=f"nav_{key}", use_container_width=True):
-            st.session_state.page = key
-            st.rerun()
+    _cur = st.session_state.get("page", "dashboard")
+    for _icon, _lbl, _key in _NAV_PAGES:
+        _is_active = _cur == _key
+        if _is_active:
+            st.markdown(f"""
+            <div style="background:rgba(200,255,0,.08);border:1px solid rgba(200,255,0,.2);
+              border-radius:8px;padding:.55rem .9rem;margin-bottom:.2rem;display:flex;align-items:center;gap:.6rem;">
+              <span style="font-size:1rem;">{_icon}</span>
+              <span style="color:#c8ff00;font-weight:700;font-size:.88rem;">{_lbl}</span>
+            </div>""", unsafe_allow_html=True)
+        else:
+            if st.button(f"{_icon}  {_lbl}", key=f"nav_{_key}", use_container_width=True):
+                st.session_state.page = _key
+                st.rerun()
 
     if st.session_state.workout:
-        elapsed = (datetime.now() - datetime.fromisoformat(st.session_state.workout["start"])).seconds // 60
+        _elapsed = (datetime.now() - datetime.fromisoformat(st.session_state.workout["start"])).seconds // 60
         st.markdown(f"""
-        <div style="margin:1rem;padding:.75rem;background:rgba(200,255,0,.07);border:1px solid rgba(200,255,0,.3);border-radius:10px;text-align:center;">
-          <div style="color:#c8ff00;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;">🔥 Treino em Andamento</div>
-          <div style="color:#888;font-size:.75rem;margin-top:.25rem;">{elapsed} min</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-# ── BLOCK IF NO CONNECTION ────────────────────────────────────────────────────
-if not conn_ok and st.session_state.page not in ("calculators", "timer"):
-    st.markdown(f"""
-    <div class="card" style="border-color:#ff4757;text-align:center;padding:3rem;">
-      <div style="font-size:3rem;">🔴</div>
-      <div style="font-size:1.5rem;font-weight:800;margin:.75rem 0 .5rem;">Sem conexão com Supabase</div>
-      <div style="color:#b0b0b0;font-size:.9rem;">{conn_err}</div>
-      <div style="margin-top:1.5rem;color:#a0a0a0;font-size:.85rem;">
-        Verifique o arquivo <code>.env</code> e rode o <code>schema.sql</code> no Supabase.
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
-    st.stop()
-
-# ── MOBILE QUICK-NAV BAR ─────────────────────────────────────────────────────
-# Shows on mobile only — horizontal scrollable row of icon+label buttons
-_mob_pages = [
-    ("🏠", "dashboard", "Início"),
-    ("🤖", "agents",    "IA"),
-    ("🏋️", "workout",   "Treino"),
-    ("📊", "progress",  "Stats"),
-    ("📋", "plans",     "Planos"),
-    ("🍽️", "nutrition", "Dieta"),
-    ("🎯", "goals",     "Metas"),
-    ("🏆", "records",   "PRs"),
-    ("📏", "measurements", "Medidas"),
-    ("🧮", "calculators", "Calc"),
-    ("⏱️", "timer",    "Timer"),
-]
-_cur_page = st.session_state.get("page", "dashboard")
-
-st.markdown("""
-<style>
-/* Hide the mob-nav wrapper on desktop */
-.mob-nav-outer{display:none;}
-@media(max-width:768px){
-  .mob-nav-outer{
-    display:flex!important;gap:.3rem;margin-bottom:1rem;
-    overflow-x:auto;padding:.15rem .05rem;-webkit-overflow-scrolling:touch;
-    scrollbar-width:none;
-  }
-  .mob-nav-outer::-webkit-scrollbar{display:none;}
-  /* Each column inside the nav */
-  .mob-nav-outer [data-testid="column"]{
-    flex:0 0 auto!important;min-width:60px!important;
-  }
-  /* Default button style */
-  .mob-nav-outer .stButton button{
-    background:#1a1a1a!important;color:#7a7a7a!important;
-    border:1px solid #2a2a2a!important;border-radius:10px!important;
-    padding:.4rem .2rem .35rem!important;font-size:.75rem!important;
-    min-height:52px!important;line-height:1.3!important;
-    font-weight:600!important;display:flex!important;
-    flex-direction:column!important;align-items:center!important;
-    gap:.1rem!important;transform:none!important;box-shadow:none!important;
-  }
-  /* Active button */
-  .mob-nav-active .stButton button{
-    background:rgba(200,255,0,.1)!important;color:#c8ff00!important;
-    border-color:rgba(200,255,0,.35)!important;
-  }
-}
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown('<div class="mob-nav-outer">', unsafe_allow_html=True)
-_mob_btn_cols = st.columns(len(_mob_pages))
-for _col, (_icon, _key, _lbl) in zip(_mob_btn_cols, _mob_pages):
-    _active = _cur_page == _key
-    with _col:
-        if _active:
-            st.markdown('<div class="mob-nav-active">', unsafe_allow_html=True)
-        if st.button(f"{_icon}\n{_lbl}", key=f"mobnav_{_key}", use_container_width=True):
-            st.session_state.page = _key
-            st.rerun()
-        if _active:
-            st.markdown('</div>', unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
+        <div style="margin:.75rem .25rem 0;padding:.65rem .9rem;background:rgba(200,255,0,.07);
+          border:1px solid rgba(200,255,0,.25);border-radius:10px;text-align:center;">
+          <div style="color:#c8ff00;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;">🔥 Treino ativo</div>
+          <div style="color:#888;font-size:.75rem;margin-top:.2rem;">{_elapsed} min</div>
+        </div>""", unsafe_allow_html=True)
 
 # ── PAGES ─────────────────────────────────────────────────────────────────────
 
@@ -711,25 +663,47 @@ def page_dashboard():
             st.markdown('<div class="card" style="text-align:center;color:#888;padding:2rem;">Nenhum treino registrado ainda.</div>', unsafe_allow_html=True)
 
     with col2:
-        st.markdown("#### 💡 Motivação")
-        q = random.choice(QUOTES)
-        st.markdown(f'<div class="quote-box"><div style="color:#f0f0f0;font-style:italic;">"{q}"</div></div>', unsafe_allow_html=True)
+        # ── Smart insight based on real data ──────────────────────────────────
+        four_weeks_ago = today - timedelta(days=28)
+        recent_4w = [s for s in sessions if date.fromisoformat(str(s["date"])[:10]) >= four_weeks_ago]
+        avg_week = round(len(recent_4w) / 4, 1) if recent_4w else 0
+        this_week = len(week_sessions)
 
-        st.markdown('<div style="margin-top:1.5rem;"></div>', unsafe_allow_html=True)
-        st.markdown("#### 📋 Seus Planos")
-        if plans:
-            for p in plans[:5]:
-                n = len(p.get("exercises") or [])
-                st.markdown(f"""
-                <div class="card" style="padding:.9rem 1.1rem;">
-                  <div style="font-weight:700;font-size:.9rem;">{p["name"]}</div>
-                  <div style="color:#a8a8a8;font-size:.78rem;margin-top:.2rem;">{n} exercícios</div>
-                </div>""", unsafe_allow_html=True)
+        if avg_week > 0 and this_week >= avg_week:
+            insight_icon, insight_color = "🔥", "#c8ff00"
+            insight_msg = f"<strong>{this_week} treinos</strong> esta semana — acima da sua média de <strong>{avg_week:.1f}/sem</strong>. Sequência mantida!"
+        elif avg_week > 0 and this_week < avg_week:
+            falta = int(avg_week - this_week)
+            insight_icon, insight_color = "📈", "#ffa502"
+            insight_msg = f"<strong>{this_week} treinos</strong> esta semana. Sua média é <strong>{avg_week:.1f}/sem</strong> — faltam {falta} para bater a meta."
+        elif streak >= 3:
+            insight_icon, insight_color = "⚡", "#c8ff00"
+            insight_msg = f"<strong>{streak} dias</strong> consecutivos treinando! Continue assim."
+        elif total_sessions == 0:
+            insight_icon, insight_color = "🏋️", "#888"
+            insight_msg = "Você ainda não registrou treinos. Hoje é um bom dia para começar!"
         else:
-            st.markdown('<div class="card" style="color:#909090;font-size:.85rem;text-align:center;">Crie seu primeiro plano!</div>', unsafe_allow_html=True)
+            insight_icon, insight_color = "💪", "#2ed573"
+            insight_msg = f"<strong>{total_sessions} treinos</strong> no total registrados. Continue evoluindo!"
 
+        st.markdown(f"""
+        <div class="card" style="border-color:rgba(200,255,0,.2);padding:1.1rem 1.25rem;">
+          <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#555;margin-bottom:.6rem;">
+            Insight do dia
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:.75rem;">
+            <span style="font-size:1.6rem;line-height:1;">{insight_icon}</span>
+            <div style="color:#d0d0d0;font-size:.9rem;line-height:1.55;">{insight_msg}</div>
+          </div>
+        </div>""", unsafe_allow_html=True)
+
+        st.markdown('<div style="margin-top:.75rem;"></div>', unsafe_allow_html=True)
         if st.button("▶️ Iniciar Treino Agora", use_container_width=True):
             st.session_state.page = "workout"
+            st.rerun()
+
+        if st.button("🤖 Falar com IRONBOT", use_container_width=True, type="secondary"):
+            st.session_state.page = "agents"
             st.rerun()
 
 
@@ -925,14 +899,14 @@ def page_workout():
 
     # ── PRE-WORKOUT SELECTION ──────────────────────────────────────────────────
     if st.session_state.workout is None:
-        today_name = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"][date.today().weekday() % 7 if date.today().weekday() < 6 else 0]
         weekday_idx = date.today().isoweekday()  # 1=Mon…7=Sun
         day_names = {1:"Segunda",2:"Terça",3:"Quarta",4:"Quinta",5:"Sexta",6:"Sábado",7:"Domingo"}
         today_label = day_names.get(weekday_idx, "")
 
-        st.markdown(f'<div class="pghead"><div class="pgtitle">Iniciar Treino</div>'
+        st.markdown(f'<div class="pghead"><div class="pgtitle">Treino</div>'
                     f'<div class="pgsub">📅 {today_label} — Escolha o treino de hoje e vamos!</div></div>',
                     unsafe_allow_html=True)
+
 
         plans = get_plans()
         if "wk_sel_name" not in st.session_state:
@@ -1047,6 +1021,36 @@ def page_workout():
                     st.session_state.wk_sel_name = None
                     st.session_state.rest_end_ts = 0.0
                     st.rerun()
+
+        # ── STANDALONE TIMER ───────────────────────────────────────────────────
+        st.markdown('<div style="height:.5rem;"></div>', unsafe_allow_html=True)
+        with st.expander("⏱️ Timer de Descanso", expanded=False):
+            _t_preset = st.radio("", ["30s","45s","1 min","90s","2 min","3 min","5 min"],
+                                 horizontal=True, key="pre_timer_preset", label_visibility="collapsed")
+            _t_map = {"30s":30,"45s":45,"1 min":60,"90s":90,"2 min":120,"3 min":180,"5 min":300}
+            _t_s = st.number_input("Personalizado (s)", 5, 600, _t_map[_t_preset], key="pre_timer_s")
+            components.html(f"""<style>body{{margin:0;background:transparent;}}
+              #w{{text-align:center;padding:.75rem 0;}}
+              #d{{font-size:clamp(2.8rem,12vw,4.5rem);font-weight:900;color:#c8ff00;font-family:'Inter',sans-serif;letter-spacing:-2px;line-height:1;transition:color .3s;}}
+              #m{{font-size:.82rem;color:#909090;margin:.4rem 0 1rem;letter-spacing:1.2px;text-transform:uppercase;}}
+              .b{{background:linear-gradient(135deg,#c8ff00,#a0cc00);color:#000;border:none;border-radius:10px;font-weight:800;font-size:.88rem;padding:.55rem 1.5rem;cursor:pointer;margin:.25rem;}}
+              .bs{{background:#1a1a1a;color:#f0f0f0;border:1px solid #2a2a2a;}}
+              #pg{{width:100%;height:4px;background:#1a1a1a;border-radius:3px;margin-top:1rem;overflow:hidden;}}
+              #pf{{height:4px;background:#c8ff00;border-radius:3px;width:100%;transition:width .8s linear,background .3s;}}
+            </style>
+            <div id="w"><div id="d">00:00</div><div id="m">Pronto</div>
+            <div><button class="b" onclick="s()">▶ Iniciar</button><button class="b bs" onclick="p()">⏸</button><button class="b bs" onclick="r()">↺</button></div>
+            <div id="pg"><div id="pf"></div></div></div>
+            <script>
+            var T={_t_s},L=T,IV=null,R=false;
+            function F(x){{var m=Math.floor(x/60),s=x%60;return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');}}
+            function U(){{document.getElementById('d').textContent=F(L);document.getElementById('pf').style.width=((L/T)*100)+'%';if(L<=5){{document.getElementById('d').style.color='#ff4757';document.getElementById('pf').style.background='#ff4757';}}}}
+            U();
+            function s(){{if(R)return;R=true;document.getElementById('m').textContent='Descansando...';IV=setInterval(function(){{if(L<=0){{clearInterval(IV);R=false;document.getElementById('m').textContent='⚡ VÁ!';document.getElementById('d').textContent='GO!';B();return;}}L--;U();}},1000);}}
+            function p(){{clearInterval(IV);R=false;document.getElementById('m').textContent='Pausado';}}
+            function r(){{clearInterval(IV);R=false;L=T;document.getElementById('d').style.color='#c8ff00';document.getElementById('pf').style.background='#c8ff00';document.getElementById('m').textContent='Pronto';U();}}
+            function B(){{try{{var c=new(window.AudioContext||window.webkitAudioContext)();[[880,.1],[660,.3],[880,.5]].forEach(function(p){{var o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=p[0];g.gain.value=.2;o.start(c.currentTime+p[1]);o.stop(c.currentTime+p[1]+.15);}});}}catch(e){{}}}}
+            </script>""", height=220)
 
     # ── ACTIVE WORKOUT ─────────────────────────────────────────────────────────
     else:
@@ -1252,14 +1256,14 @@ def page_workout():
                 w_val = row_cols[1].number_input("kg",   0.0, 500.0, step=2.5, key=f"w_{ei}_{si}", label_visibility="collapsed")
                 r_val = row_cols[2].number_input("reps", 0,   100,   step=1,   key=f"r_{ei}_{si}", label_visibility="collapsed")
 
-                # Botão grande — sem st.rerun() explícito: o click já dispara rerun
                 btn_label = "✅ Feito" if done_this else "◯ Marcar"
                 if row_cols[3].button(btn_label, key=f"d_{ei}_{si}",
                                       type="primary" if done_this else "secondary",
                                       use_container_width=True):
-                    s["done"]   = not done_this
+                    # Persiste peso/reps do input atual antes de togglar
                     s["weight"] = w_val
                     s["reps"]   = r_val
+                    s["done"]   = not done_this
                     if not done_this:
                         if w_val > 0 and r_val > 0:
                             _new_rm1 = w_val * (1 + r_val / 30)
@@ -1268,6 +1272,7 @@ def page_workout():
                                 st.session_state.wk_new_pr = ex["name"]
                         st.session_state.rest_end_ts  = time.time() + ex.get("rest", 90)
                         st.session_state.rest_ex_name = ex["name"]
+                    st.rerun()
 
                 if si > 0:
                     prev_s = ex["sets"][si - 1]
@@ -1718,7 +1723,7 @@ def page_progress():
             st.rerun()
         return
 
-    tab1, tab2 = st.tabs(["💪 Por Exercício", "📊 Volume Semanal"])
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["💪 Por Exercício", "📊 Volume Semanal", "🏋️ 1RM", "🔥 TDEE & Macros", "⚖️ IMC", "🔩 Anilhas"])
 
     with tab1:
         sel_ex = st.selectbox("Exercício", sorted(ex_data.keys()))
@@ -1761,6 +1766,90 @@ def page_progress():
                 font_color="#888", height=300, margin=dict(l=0,r=0,t=10,b=0),
                 xaxis=dict(gridcolor="#1e1e1e"), yaxis=dict(gridcolor="#1e1e1e", title="Volume (kg·reps)"))
             st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
+
+    with tab3:
+        st.markdown("#### Estimativa de 1 Repetição Máxima")
+        c1, c2 = st.columns(2)
+        rm_w = c1.number_input("Peso levantado (kg)", 0.0, 500.0, 100.0, 2.5, key="pr_rm_w")
+        rm_r = c2.number_input("Repetições", 1, 30, 8, key="pr_rm_r")
+        epley   = rm_w * (1 + rm_r/30)
+        brzycki = rm_w * (36/(37-rm_r)) if rm_r < 37 else 0
+        mayhew  = (100*rm_w)/(52.2+41.9*math.exp(-0.055*rm_r))
+        avg_rm = (epley+brzycki+mayhew)/3
+        c1,c2,c3,c4 = st.columns(4)
+        c1.metric("Epley",   f"{epley:.1f} kg")
+        c2.metric("Brzycki", f"{brzycki:.1f} kg")
+        c3.metric("Mayhew",  f"{mayhew:.1f} kg")
+        c4.metric("Média",   f"{avg_rm:.1f} kg")
+        st.markdown("#### Zonas de Treinamento")
+        for pct, label in [(100,"1RM"),(95,"2–3 reps"),(90,"4–5 reps"),(85,"6 reps"),
+                           (80,"8 reps"),(75,"10 reps"),(70,"12 reps"),(65,"15 reps"),(60,"20 reps")]:
+            val = avg_rm*pct/100
+            st.markdown(f"""<div class="set-row" style="margin-bottom:.3rem;">
+              <span style="color:#c8ff00;font-weight:700;width:3rem;">{pct}%</span>
+              <span style="flex:1;color:#888;font-size:.85rem;">{label}</span>
+              <strong>{val:.1f} kg</strong></div>""", unsafe_allow_html=True)
+
+    with tab4:
+        c1,c2 = st.columns(2)
+        td_peso = c1.number_input("Peso (kg)", 30.0, 250.0, 75.0, 0.5, key="pr_td_p")
+        td_alt  = c2.number_input("Altura (cm)", 100.0, 250.0, 175.0, 0.5, key="pr_td_a")
+        c1,c2 = st.columns(2)
+        td_age  = c1.number_input("Idade", 10, 100, 25, key="pr_td_age")
+        td_sex  = c2.radio("Sexo", ["Masculino","Feminino"], horizontal=True, key="pr_td_sex")
+        td_act  = st.selectbox("Nível de Atividade", ["Sedentário","Levemente ativo (1–3x/sem)",
+            "Moderadamente ativo (3–5x/sem)","Muito ativo (6–7x/sem)","Extremamente ativo (2x/dia)"], key="pr_td_act")
+        goal_td = st.radio("Objetivo", ["Perder Peso","Manter Peso","Ganhar Massa"], horizontal=True, key="pr_td_goal")
+        act_mult = [1.2,1.375,1.55,1.725,1.9][["Sedentário","Levemente ativo (1–3x/sem)",
+            "Moderadamente ativo (3–5x/sem)","Muito ativo (6–7x/sem)","Extremamente ativo (2x/dia)"].index(td_act)]
+        bmr_td = (88.362+13.397*td_peso+4.799*td_alt-5.677*td_age) if td_sex=="Masculino" else \
+                 (447.593+9.247*td_peso+3.098*td_alt-4.330*td_age)
+        tdee_td = bmr_td*act_mult
+        adj_td = -500 if goal_td=="Perder Peso" else (300 if goal_td=="Ganhar Massa" else 0)
+        target_td = tdee_td+adj_td
+        c1,c2,c3 = st.columns(3)
+        c1.metric("TMB (Basal)",f"{bmr_td:.0f} kcal")
+        c2.metric("TDEE",       f"{tdee_td:.0f} kcal")
+        c3.metric("Alvo",       f"{target_td:.0f} kcal")
+        prot_td = td_peso*(2.2 if goal_td=="Ganhar Massa" else 2.0)
+        fat_td  = target_td*0.25/9
+        carb_td = max((target_td-prot_td*4-fat_td*9)/4, 0)
+        c1,c2,c3 = st.columns(3)
+        c1.metric("Proteínas",   f"{prot_td:.0f}g", f"{prot_td*4:.0f} kcal")
+        c2.metric("Carboidratos",f"{carb_td:.0f}g",  f"{carb_td*4:.0f} kcal")
+        c3.metric("Gorduras",    f"{fat_td:.0f}g",   f"{fat_td*9:.0f} kcal")
+
+    with tab5:
+        c1,c2 = st.columns(2)
+        bmi_p = c1.number_input("Peso (kg)", 30.0, 250.0, 75.0, 0.5, key="pr_bmi_p")
+        bmi_h = c2.number_input("Altura (cm)", 100.0, 250.0, 175.0, 0.5, key="pr_bmi_h")
+        bmi_v = bmi_p/(bmi_h/100)**2
+        bmi_cat = "Abaixo do peso" if bmi_v<18.5 else ("Normal" if bmi_v<25 else ("Sobrepeso" if bmi_v<30 else "Obesidade"))
+        bmi_col = "#2ed573" if 18.5<=bmi_v<25 else ("#ffa502" if bmi_v<30 else "#ff4757")
+        st.markdown(f"""<div class="card" style="text-align:center;padding:2rem;">
+          <div style="font-size:4rem;font-weight:900;color:{bmi_col};">{bmi_v:.1f}</div>
+          <div style="font-size:1.2rem;color:#aaa;margin-top:.5rem;">{bmi_cat}</div></div>""", unsafe_allow_html=True)
+
+    with tab6:
+        c1,c2 = st.columns(2)
+        bar_w_pr    = c1.selectbox("Barra", [20.0,15.0,10.0,7.5], format_func=lambda x: f"{x} kg", key="pr_bar_w")
+        target_w_pr = c2.number_input("Peso total (kg)", 0.0, 500.0, 100.0, 2.5, key="pr_target_w")
+        remaining_pr = (target_w_pr - bar_w_pr) / 2
+        used_pr = []
+        for p in [25.0,20.0,15.0,10.0,5.0,2.5,1.25]:
+            while remaining_pr >= p-0.001:
+                used_pr.append(p); remaining_pr = round(remaining_pr-p, 3)
+        if used_pr:
+            st.markdown("**Por lado:**")
+            for p in used_pr:
+                st.markdown(f'<span class="badge badge-a" style="margin:.2rem;font-size:.95rem;">{p} kg</span>', unsafe_allow_html=True)
+            total_pr = bar_w_pr + sum(used_pr)*2
+            if abs(remaining_pr) > 0.01:
+                st.warning(f"⚠️ Total aproximado: {total_pr} kg")
+            else:
+                st.success(f"✅ Total: {total_pr} kg")
+        else:
+            st.info("Peso alvo menor que o peso da barra.")
 
 
 def page_measurements():
@@ -2262,8 +2351,6 @@ def page_goals():
     "progress":     page_progress,
     "measurements": page_measurements,
     "records":      page_records,
-    "calculators":  page_calculators,
-    "timer":        page_timer,
     "nutrition":    page_nutrition,
     "goals":        page_goals,
 }.get(st.session_state.page, page_dashboard)()

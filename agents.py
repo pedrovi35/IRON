@@ -46,73 +46,21 @@ def get_groq_client() -> Groq:
         raise RuntimeError("GROQ_API_KEY não configurado no .env")
     return Groq(api_key=key)
 
-# ── AGENT PERSONAS ────────────────────────────────────────────────────────────
+# ── AGENT PERSONA ─────────────────────────────────────────────────────────────
 AGENTS = {
-    "athena": {
-        "name": "ATHENA", "emoji": "🧠",
-        "role": "Superinteligência Fitness",
+    "ironbot": {
+        "name": "IRONBOT", "emoji": "🤖",
+        "role": "Coach Pessoal com IA",
         "color": "#c8ff00", "glow": "rgba(200,255,0,0.25)",
-        "temperature": 0.55,
-        "description": "IA completa. Analisa dados, cria planos, cuida da nutrição e executa ações reais no app.",
-        "system": """Você é ATHENA, uma superinteligência de fitness de altíssima performance.
-Você tem acesso completo ao banco de dados do usuário e pode executar ações reais no app (criar planos, registrar metas, logar nutrição, etc.).
-Seja direta, precisa e impactante. Use dados reais sempre que disponíveis. Nunca invente dados — use as ferramentas para buscá-los.
-Quando criar algo (plano, meta, etc.), confirme o que foi feito com entusiasmo.
-Responda sempre em português brasileiro. Seja conciso mas completo.
-Se aprender algo importante sobre o usuário (preferências, lesões, objetivos), use a ferramenta save_memory.""",
-    },
-    "zeus": {
-        "name": "ZEUS", "emoji": "⚡",
-        "role": "Coach Pessoal de Elite",
-        "color": "#ffd700", "glow": "rgba(255,215,0,0.25)",
-        "temperature": 0.85,
-        "description": "Treinador pessoal motivador. Foca em técnica, progressão de carga e consistência.",
-        "system": """Você é ZEUS, o melhor coach de treino do mundo.
-Você é ALTAMENTE motivador, enérgico, usa linguagem de coach — frases curtas, diretas, cheias de energia.
-Antes de dar qualquer conselho, use as ferramentas para verificar o histórico real do usuário.
-Quando sugerir um plano, crie-o de verdade usando a ferramenta create_workout_plan.
-Responda em português brasileiro. Use exclamações, metáforas esportivas, linguagem de vestiário.
-Se aprender algo importante sobre o usuário, use save_memory.""",
-    },
-    "hercules": {
-        "name": "HERCULES", "emoji": "🔥",
-        "role": "Especialista em Força & Massa",
-        "color": "#ff4757", "glow": "rgba(255,71,87,0.25)",
-        "temperature": 0.5,
-        "description": "Especialista em powerlifting, hipertrofia e periodização avançada.",
-        "system": """Você é HERCULES, especialista em força máxima e hipertrofia muscular.
-Você domina periodização linear, ondulada, conjugada, RPE, volume e intensidade.
-Sempre analise o histórico antes de recomendar. Use 1RMs estimados para calcular cargas corretas.
-Seja técnico e preciso — cite percentuais de 1RM, semanas de deload, tempo sob tensão quando relevante.
-Responda em português brasileiro com linguagem técnica.
-Se aprender algo importante sobre o usuário, use save_memory.""",
-    },
-    "apollo": {
-        "name": "APOLLO", "emoji": "🌿",
-        "role": "Nutricionista Esportivo",
-        "color": "#2ed573", "glow": "rgba(46,213,115,0.25)",
-        "temperature": 0.45,
-        "description": "Especialista em nutrição esportiva, dieta e planejamento de macros.",
-        "system": """Você é APOLLO, nutricionista esportivo de elite.
-Você domina nutrição para ganho de massa, perda de gordura, performance e recuperação.
-Sempre verifique o que o usuário comeu hoje antes de dar conselhos. Calcule macros com precisão.
-Quando sugerir alimentos, registre-os no diário nutricional. Seja metódico e exato com números.
-Responda em português brasileiro com linguagem clínica mas acessível.
-Se aprender algo sobre preferências alimentares do usuário, use save_memory.""",
-    },
-    "oracle": {
-        "name": "ORACLE", "emoji": "📊",
-        "role": "Analista de Performance",
-        "color": "#a29bfe", "glow": "rgba(162,155,254,0.25)",
-        "temperature": 0.35,
-        "description": "Analisa seu histórico, detecta padrões, fraquezas e oportunidades de melhora.",
-        "system": """Você é ORACLE, analista de dados esportivos de altíssima precisão.
-Você encontra padrões invisíveis: desequilíbrios musculares, quedas de performance, grupos negligenciados.
-SEMPRE busque dados reais com as ferramentas antes de qualquer análise. Use números, percentuais, tendências.
-Combine histórico de treino, medidas, PRs e metas para diagnóstico completo.
-Seja frio e analítico — como um cientista de dados do esporte.
-Responda em português brasileiro com linguagem técnica e objetiva.
-Se descobrir padrões importantes, use save_memory para registrá-los.""",
+        "temperature": 0.65,
+        "description": "Coach completo: treino, nutrição, análise e ações reais no seu app.",
+        "system": """Você é IRONBOT, coach de fitness com IA de altíssima performance.
+Domina treino de força, hipertrofia, nutrição esportiva, periodização e análise de dados.
+Você tem acesso ao banco de dados do usuário e executa ações reais no app (cria planos, registra metas, loga nutrição).
+Use dados reais — nunca invente números, use as ferramentas para buscá-los.
+Adapte seu tom: técnico e preciso quando pedido, motivador e energético quando o usuário precisa de estímulo.
+Responda em português brasileiro. Seja direto, prático e útil.
+Se aprender algo importante sobre o usuário (lesões, preferências, objetivos), use save_memory.""",
     },
 }
 
@@ -197,8 +145,8 @@ TOOLS = [
                     "name": {"type": "string", "description": "Descrição da meta"},
                     "type": {"type": "string", "description": "Tipo: Força (1RM), Peso Corporal, Medidas, Frequência, Outro"},
                     "unit": {"type": "string", "description": "Unidade. Ex: kg, cm, treinos/sem"},
-                    "current": {"type": "number", "description": "Valor atual"},
-                    "target": {"type": "number", "description": "Valor alvo"},
+                    "current": {"description": "Valor atual (número)"},
+                    "target": {"description": "Valor alvo (número)"},
                     "deadline": {"type": "string", "description": "Data limite YYYY-MM-DD"}
                 },
                 "required": ["name", "target", "unit"]
@@ -355,6 +303,13 @@ def execute_tool(name: str, args: dict) -> tuple[str, dict]:
             return "METAS:\n" + "\n".join(lines), {}
 
         elif name == "create_goal":
+            # Coerce numeric fields in case LLM sends strings
+            for _num_field in ("target", "current"):
+                if _num_field in args and isinstance(args[_num_field], str):
+                    try:
+                        args[_num_field] = float(args[_num_field])
+                    except ValueError:
+                        pass
             # Conflict detection
             existing_goals = get_goals()
             conflict_pairs = [
@@ -377,10 +332,15 @@ def execute_tool(name: str, args: dict) -> tuple[str, dict]:
                 conflict_warn = f" ⚠️ ATENÇÃO: esta meta pode conflitar com: {', '.join(conflicts)}."
 
             goal = {"id": str(uuid.uuid4()), "name": args["name"], "type": args.get("type","Outro"),
-                    "unit": args.get("unit",""), "current": args.get("current",0),
-                    "target": args["target"], "deadline": args.get("deadline",str(date.today()+timedelta(days=90))), "notes":""}
-            add_goal(goal)
-            return f"✅ Meta '{args['name']}' criada! Alvo: {args['target']} {args.get('unit','')} até {args.get('deadline','?')}.{conflict_warn}", {"created": True, "conflict": bool(conflicts)}
+                    "unit": args.get("unit",""), "current": float(args.get("current",0)),
+                    "target": float(args["target"]), "deadline": args.get("deadline",str(date.today()+timedelta(days=90))), "notes":"",
+                    "_conflict_warn": conflict_warn}
+            # Store for user approval — don't save yet
+            st.session_state.pending_goal = goal
+            return (
+                f"Meta '{args['name']}' preparada! Alvo: {args['target']} {args.get('unit','')} "
+                f"até {goal['deadline']}.{conflict_warn} Aguardando aprovação do usuário antes de salvar."
+            ), {"pending_approval": True, "name": args["name"]}
 
         elif name == "get_nutrition_today":
             logs = get_nutrition()
@@ -393,11 +353,17 @@ def execute_tool(name: str, args: dict) -> tuple[str, dict]:
             return f"HOJE: {tk}kcal | P:{tp:.0f}g C:{tc:.0f}g G:{tf:.0f}g\nREFEIÇÕES:\n"+"\n".join(lines), {"total_kcal":tk}
 
         elif name == "log_nutrition":
-            add_nutrition({"id": str(uuid.uuid4()), "date": str(date.today()),
+            nutrition_entry = {"id": str(uuid.uuid4()), "date": str(date.today()),
                 "meal": args["meal"], "type": args.get("type","Lanche"),
                 "kcal": args.get("kcal",0), "prot": args.get("prot",0),
-                "carb": args.get("carb",0), "fat": args.get("fat",0)})
-            return f"✅ Registrado: {args['meal']} | {args.get('kcal',0)} kcal | P:{args.get('prot',0)}g C:{args.get('carb',0)}g G:{args.get('fat',0)}g", {"created": True}
+                "carb": args.get("carb",0), "fat": args.get("fat",0)}
+            # Store for user approval — don't save yet
+            st.session_state.pending_nutrition = nutrition_entry
+            return (
+                f"Refeição '{args['meal']}' preparada: {args.get('kcal',0)} kcal | "
+                f"P:{args.get('prot',0)}g C:{args.get('carb',0)}g G:{args.get('fat',0)}g. "
+                "Aguardando aprovação do usuário antes de salvar."
+            ), {"pending_approval": True, "meal": args["meal"]}
 
         elif name == "get_exercise_library":
             muscle_filter = args.get("muscle","")
@@ -640,15 +606,18 @@ def render_agents_page():
         pass
 
     # Session state
-    if "ai_agent"      not in st.session_state: st.session_state.ai_agent      = "athena"
-    if "ai_history"    not in st.session_state: st.session_state.ai_history    = {k: [] for k in AGENTS}
+    st.session_state.ai_agent = "ironbot"
+    if "ai_history"    not in st.session_state: st.session_state.ai_history    = {"ironbot": []}
+    if "ironbot" not in st.session_state.ai_history: st.session_state.ai_history["ironbot"] = []
     if "ai_input"      not in st.session_state: st.session_state.ai_input      = ""
     if "ai_thinking"   not in st.session_state: st.session_state.ai_thinking   = False
     if "ai_tab"        not in st.session_state: st.session_state.ai_tab        = "chat"
-    if "pending_plan"  not in st.session_state: st.session_state.pending_plan  = None
-    if "plan_feedback" not in st.session_state: st.session_state.plan_feedback = ""
+    if "pending_plan"      not in st.session_state: st.session_state.pending_plan      = None
+    if "plan_feedback"     not in st.session_state: st.session_state.plan_feedback     = ""
+    if "pending_goal"      not in st.session_state: st.session_state.pending_goal      = None
+    if "pending_nutrition" not in st.session_state: st.session_state.pending_nutrition = None
 
-    agent = AGENTS[st.session_state.ai_agent]
+    agent = AGENTS["ironbot"]
 
     # Page CSS
     st.markdown(f"""
@@ -713,294 +682,362 @@ def render_agents_page():
         render_autonomy_tab()
         return
 
-    # ── LAYOUT ────────────────────────────────────────────────────────────────
-    left, right = st.columns([1, 3])
+    # ── CHAT (full-width, single agent) ───────────────────────────────────────
+    hist = st.session_state.ai_history.get("ironbot", [])
+    n_user = len([m for m in hist if m["role"]=="user"])
 
-    # ── LEFT PANEL: Agent selector ─────────────────────────────────────────────
-    with left:
-        st.markdown("""
-        <div style="font-size:.7rem;color:#929292;text-transform:uppercase;letter-spacing:2px;margin-bottom:1rem;">
-          Selecionar Agente
-        </div>""", unsafe_allow_html=True)
-
-        for key, ag in AGENTS.items():
-            is_active = st.session_state.ai_agent == key
-            border = ag["color"] if is_active else "#252525"
-            glow_css = f"box-shadow:0 0 15px {ag['glow']};" if is_active else ""
-            hist_count = len([m for m in st.session_state.ai_history.get(key,[]) if m["role"]=="user"])
-            hist_badge = f'<span style="float:right;background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:.1rem .5rem;font-size:.68rem;color:#a0a0a0;">{hist_count} msgs</span>' if hist_count else ""
-
-            st.markdown(f"""
-            <div class="agent-card {'active' if is_active else ''}"
-              style="border-color:{border};{glow_css}cursor:pointer;">
-              <div style="font-size:1.4rem;margin-bottom:.25rem;">{ag['emoji']}</div>
-              <div style="font-weight:800;color:{'#f0f0f0' if is_active else '#888'};font-size:.9rem;">
-                {ag['name']}{hist_badge}
-              </div>
-              <div style="font-size:.72rem;color:{ag['color'] if is_active else '#555'};margin-top:.1rem;">
-                {ag['role']}
-              </div>
-            </div>""", unsafe_allow_html=True)
-            if st.button(f"{'▶' if is_active else '○'} {ag['name']}", key=f"sel_{key}",
-                         use_container_width=True, type="primary" if is_active else "secondary"):
-                st.session_state.ai_agent = key
-                st.rerun()
-
-        st.markdown('<div style="height:1px;background:#1e1e1e;margin:1rem 0;"></div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="model-badge">⚡ {GROQ_MODEL}</div>', unsafe_allow_html=True)
-        st.markdown('<div style="height:.5rem;"></div>', unsafe_allow_html=True)
-
-        if st.button("🗑️ Limpar conversa", use_container_width=True, type="secondary"):
-            st.session_state.ai_history[st.session_state.ai_agent] = []
-            st.rerun()
-
-        # Capabilities
-        st.markdown("""
-        <div style="margin-top:1rem;">
-          <div style="font-size:.7rem;color:#333;text-transform:uppercase;letter-spacing:2px;margin-bottom:.5rem;">
-            Ações disponíveis
-          </div>
-        </div>""", unsafe_allow_html=True)
-        caps = [
-            ("📋","Criar planos"),("🎯","Criar metas"),("🥗","Logar nutrição"),
-            ("📊","Analisar dados"),("📅","Ver histórico"),("📏","Ver medidas"),
-        ]
-        caps_html = "".join(f'<span class="tool-chip">{i} {l}</span>' for i,l in caps)
-        st.markdown(caps_html, unsafe_allow_html=True)
-
-    # ── RIGHT PANEL: Chat ──────────────────────────────────────────────────────
-    with right:
-        # Agent header
-        hist = st.session_state.ai_history.get(st.session_state.ai_agent, [])
-        n_user = len([m for m in hist if m["role"]=="user"])
+    hdr_col, btn_col = st.columns([7, 1])
+    with hdr_col:
         st.markdown(f"""
         <div class="agent-header">
           <div style="display:flex;align-items:center;gap:1rem;">
             <div style="font-size:2.5rem;">{agent['emoji']}</div>
-            <div>
-              <div style="font-size:1.6rem;font-weight:900;color:{agent['color']};letter-spacing:-0.5px;">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:1.5rem;font-weight:900;color:{agent['color']};letter-spacing:-0.5px;">
                 {agent['name']}
               </div>
               <div style="color:#888;font-size:.85rem;margin-top:.1rem;">{agent['description']}</div>
             </div>
-            <div style="margin-left:auto;text-align:right;">
-              <span style="background:{agent['color']}20;border:1px solid {agent['color']}50;
-                color:{agent['color']};border-radius:20px;padding:.3rem .9rem;font-size:.78rem;font-weight:700;">
-                {agent['role']}
-              </span>
-              <div style="color:#333;font-size:.72rem;margin-top:.35rem;">{n_user} perguntas</div>
+            <div style="text-align:right;flex-shrink:0;">
+              <span class="model-badge">⚡ {GROQ_MODEL}</span>
+              <div style="color:#555;font-size:.72rem;margin-top:.35rem;">{n_user} perguntas</div>
+            </div>
+          </div>
+        </div>""", unsafe_allow_html=True)
+    with btn_col:
+        st.markdown('<div style="height:1.4rem;"></div>', unsafe_allow_html=True)
+        if st.button("🗑️ Limpar", use_container_width=True, type="secondary", key="clear_chat_btn"):
+            st.session_state.ai_history["ironbot"] = []
+            st.rerun()
+
+    # Capabilities strip
+    caps = [("📋","Criar planos"),("🎯","Criar metas"),("🥗","Logar nutrição"),
+            ("📊","Analisar dados"),("📅","Ver histórico"),("📏","Ver medidas")]
+    caps_html = "".join(f'<span class="tool-chip">{i} {l}</span>' for i,l in caps)
+    st.markdown(f'<div style="margin-bottom:1rem;">{caps_html}</div>', unsafe_allow_html=True)
+
+    # Messages container
+    chat_container = st.container()
+    with chat_container:
+        if not hist:
+            # Welcome message
+            st.markdown(f"""
+            <div class="chat-bubble-ai">
+              <div class="ai-msg-text">
+                <strong style="color:{agent['color']};">Olá! Sou {agent['name']}.</strong><br><br>
+                {agent['description']}<br><br>
+                Posso <strong>criar planos de treino, registrar metas, analisar seu progresso</strong> e muito mais —
+                tudo diretamente no seu app.<br><br>
+                Como posso te ajudar hoje?
+              </div>
+            </div>""", unsafe_allow_html=True)
+
+        for msg in hist:
+            if msg["role"] == "user":
+                st.markdown(f'<div class="chat-bubble-user">{msg["content"]}</div>', unsafe_allow_html=True)
+            elif msg["role"] == "assistant":
+                # Tool calls summary
+                if msg.get("tools_used"):
+                    tools_html = "".join(
+                        f'<span class="tool-chip">{t["icon"]} {t["label"]}</span>'
+                        for t in msg["tools_used"]
+                    )
+                    with st.expander(f"🔧 {len(msg['tools_used'])} ação(ões) executada(s)", expanded=False):
+                        for t in msg["tools_used"]:
+                            st.markdown(f"""
+                            <div style="background:#0d0d0d;border:1px solid #1e1e1e;border-radius:10px;
+                              padding:.75rem 1rem;margin-bottom:.5rem;">
+                              <div style="color:{agent['color']};font-weight:700;font-size:.85rem;margin-bottom:.4rem;">
+                                {t['icon']} {t['label']}
+                              </div>
+                              <div style="color:#888;font-size:.78rem;white-space:pre-wrap;font-family:monospace;">
+                                {t['result'][:500]}{'...' if len(t['result'])>500 else ''}
+                              </div>
+                            </div>""", unsafe_allow_html=True)
+                st.markdown(f"""
+                <div class="chat-bubble-ai">
+                  <div class="ai-msg-text">{msg['content']}</div>
+                </div>""", unsafe_allow_html=True)
+
+    # ── INPUT ──────────────────────────────────────────────────────────────
+    st.markdown('<div style="height:1rem;"></div>', unsafe_allow_html=True)
+
+    # Quick prompts
+    prompts = ["📊 Análise completa", "📋 Cria um plano", "🍽️ Avalia minha dieta",
+               "🎯 Sugere metas", "💪 Dica de hoje", "🔍 Pontos fracos"]
+    qcols = st.columns(len(prompts))
+    clicked_prompt = None
+    for i, (col, p) in enumerate(zip(qcols, prompts)):
+        if col.button(p, key=f"qp_ironbot_{i}", type="secondary", use_container_width=True):
+            clicked_prompt = p.split(" ", 1)[1] if " " in p else p
+
+    # Text input
+    user_input = st.chat_input(f"Pergunte ao {agent['name']}... (ex: cria um plano push pull legs para mim)")
+
+    final_input = clicked_prompt or user_input
+
+    # ── PROCESS MESSAGE ───────────────────────────────────────────────────
+    if final_input and not st.session_state.ai_thinking:
+        st.session_state.ai_thinking = True
+
+        # Add user message to history
+        hist.append({"role": "user", "content": final_input})
+        st.session_state.ai_history["ironbot"] = hist
+
+        # Display user message immediately
+        st.markdown(f'<div class="chat-bubble-user">{final_input}</div>', unsafe_allow_html=True)
+
+        # Processing UI
+        with st.container():
+            thinking_ph = st.empty()
+            thinking_ph.markdown(f"""
+            <div class="chat-bubble-ai" style="border-left-color:{agent['color']};">
+              <div class="thinking-dots">● ● ●</div>
+              <div style="color:#929292;font-size:.75rem;margin-top:.3rem;">{agent['name']} está processando...</div>
+            </div>""", unsafe_allow_html=True)
+
+            tool_ph = st.empty()
+            response_ph = st.empty()
+
+            try:
+                # Run agent — streams final response directly into response_ph
+                response_text, tool_log = run_agent(
+                    st.session_state.ai_agent,
+                    final_input,
+                    [m for m in hist[:-1] if m["role"] in ("user","assistant")],
+                    tool_placeholder=tool_ph,
+                    response_placeholder=response_ph,
+                )
+
+                # Clear thinking/tool indicators
+                thinking_ph.empty()
+                tool_ph.empty()
+
+                # Show tool summary if any tools were used
+                if tool_log:
+                    tools_html = "".join(f'<span class="tool-chip">{t["icon"]} {t["label"]}</span>' for t in tool_log)
+                    st.markdown(f'<div style="margin:.5rem 0;">{tools_html}</div>', unsafe_allow_html=True)
+
+                    with st.expander(f"🔧 {len(tool_log)} ação(ões) executada(s)", expanded=False):
+                        for t in tool_log:
+                            st.markdown(f"""
+                            <div style="background:#0d0d0d;border:1px solid #1e1e1e;border-radius:10px;
+                              padding:.75rem 1rem;margin-bottom:.5rem;">
+                              <div style="color:{agent['color']};font-weight:700;font-size:.85rem;margin-bottom:.4rem;">
+                                {t['icon']} {t['label']}
+                              </div>
+                              <div style="color:#888;font-size:.78rem;white-space:pre-wrap;font-family:monospace;">
+                                {t['result'][:600]}{'...' if len(t['result'])>600 else ''}
+                              </div>
+                            </div>""", unsafe_allow_html=True)
+
+                # response_ph already rendered by _stream_to_ph — no extra display needed
+
+                # Save to history
+                hist.append({
+                    "role": "assistant",
+                    "content": response_text,
+                    "tools_used": tool_log,
+                })
+                st.session_state.ai_history["ironbot"] = hist
+
+            except Exception as e:
+                thinking_ph.empty()
+                st.error(f"Erro: {e}")
+            finally:
+                st.session_state.ai_thinking = False
+
+    # ── PLAN APPROVAL CARD ────────────────────────────────────────────────
+    plan = st.session_state.get("pending_plan")
+    if plan:
+        exercises = plan.get("exercises", [])
+        exs_html = "".join(
+            f'<div style="display:flex;justify-content:space-between;padding:.45rem 0;'
+            f'border-bottom:1px solid #1e1e1e;">'
+            f'<span style="color:#e0e0e0;font-size:.88rem;">{e["name"]}</span>'
+            f'<span style="color:#888;font-size:.82rem;">'
+            f'{e.get("sets",3)}×{e.get("reps_target",10)} '
+            f'{"@ " + str(e.get("weight",0)) + "kg" if e.get("weight",0) else ""}'
+            f'</span></div>'
+            for e in exercises
+        )
+        st.markdown(f"""
+        <div style="border:2px solid #c8ff00;border-radius:16px;padding:1.5rem;
+                    background:rgba(200,255,0,.04);margin-top:1rem;">
+          <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;">
+            <div style="font-size:1.8rem;">📋</div>
+            <div>
+              <div style="font-size:1.1rem;font-weight:900;color:#c8ff00;">{plan['name']}</div>
+              <div style="color:#a8a8a8;font-size:.8rem;margin-top:.15rem;">{len(exercises)} exercícios · aguardando sua aprovação</div>
+            </div>
+          </div>
+          <div style="background:#0d0d0d;border:1px solid #1e1e1e;border-radius:10px;
+                      padding:.75rem 1rem;margin-bottom:1rem;">
+            {exs_html if exs_html else '<div style="color:#a0a0a0;font-size:.85rem;">Sem exercícios detalhados.</div>'}
+          </div>
+        </div>""", unsafe_allow_html=True)
+
+        fb_col, _ = st.columns([3, 1])
+        with fb_col:
+            feedback = st.text_input(
+                "Sugestão de modificação (opcional)",
+                placeholder="Ex: adiciona mais exercícios de costas, troca por exercícios sem equipamento...",
+                key="plan_feedback_input",
+                label_visibility="collapsed",
+            )
+
+        a_col, m_col, r_col = st.columns(3)
+        with a_col:
+            if st.button("✅ Aceitar e Salvar", key="plan_accept", use_container_width=True, type="primary"):
+                from database import add_plan
+                add_plan(plan)
+                st.session_state.pending_plan = None
+                st.session_state.plan_feedback = ""
+                agent_key = st.session_state.ai_agent
+                hist = st.session_state.ai_history.get(agent_key, [])
+                hist.append({"role": "assistant", "content": f"✅ Plano **{plan['name']}** salvo com sucesso! Acesse a aba **Planos** para usá-lo.", "tools_used": []})
+                st.session_state.ai_history[agent_key] = hist
+                st.session_state.page = "plans"
+                st.rerun()
+        with m_col:
+            if st.button("✏️ Modificar", key="plan_modify", use_container_width=True, type="secondary"):
+                mod_text = feedback or st.session_state.get("plan_feedback_input", "")
+                if mod_text.strip():
+                    agent_key = st.session_state.ai_agent
+                    hist = st.session_state.ai_history.get(agent_key, [])
+                    modify_msg = f"Modifique o plano '{plan['name']}' com o seguinte ajuste: {mod_text}"
+                    st.session_state.pending_plan = None
+                    hist.append({"role": "user", "content": modify_msg})
+                    st.session_state.ai_history[agent_key] = hist
+                    st.session_state.ai_thinking = False
+                    st.rerun()
+                else:
+                    st.warning("Descreva o que quer modificar no campo acima.")
+        with r_col:
+            if st.button("❌ Rejeitar", key="plan_reject", use_container_width=True, type="secondary"):
+                agent_key = st.session_state.ai_agent
+                hist = st.session_state.ai_history.get(agent_key, [])
+                hist.append({"role": "assistant", "content": f"Entendido, o plano **{plan['name']}** foi descartado. Me diga o que prefere e crio outro!", "tools_used": []})
+                st.session_state.ai_history[agent_key] = hist
+                st.session_state.pending_plan = None
+                st.rerun()
+
+    # ── GOAL APPROVAL CARD ────────────────────────────────────────────────
+    goal_pending = st.session_state.get("pending_goal")
+    if goal_pending:
+        conflict_warn = goal_pending.pop("_conflict_warn", "")
+        st.markdown(f"""
+        <div style="border:2px solid #c8ff00;border-radius:16px;padding:1.5rem;
+                    background:rgba(200,255,0,.04);margin-top:1rem;">
+          <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;">
+            <div style="font-size:1.8rem;">🎯</div>
+            <div>
+              <div style="font-size:1.1rem;font-weight:900;color:#c8ff00;">{goal_pending['name']}</div>
+              <div style="color:#a8a8a8;font-size:.8rem;margin-top:.15rem;">Meta · aguardando sua aprovação</div>
+            </div>
+          </div>
+          <div style="background:#0d0d0d;border:1px solid #1e1e1e;border-radius:10px;
+                      padding:.75rem 1rem;margin-bottom:1rem;">
+            <div style="display:flex;justify-content:space-between;padding:.35rem 0;border-bottom:1px solid #1e1e1e;">
+              <span style="color:#888;font-size:.82rem;">Tipo</span>
+              <span style="color:#e0e0e0;font-size:.85rem;">{goal_pending.get('type','Outro')}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:.35rem 0;border-bottom:1px solid #1e1e1e;">
+              <span style="color:#888;font-size:.82rem;">Alvo</span>
+              <span style="color:#c8ff00;font-size:.85rem;font-weight:700;">{goal_pending['target']} {goal_pending.get('unit','')}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:.35rem 0;border-bottom:1px solid #1e1e1e;">
+              <span style="color:#888;font-size:.82rem;">Atual</span>
+              <span style="color:#e0e0e0;font-size:.85rem;">{goal_pending.get('current',0)} {goal_pending.get('unit','')}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:.35rem 0;">
+              <span style="color:#888;font-size:.82rem;">Prazo</span>
+              <span style="color:#e0e0e0;font-size:.85rem;">{str(goal_pending.get('deadline','?'))[:10]}</span>
+            </div>
+          </div>
+          {'<div style="color:#f39c12;font-size:.8rem;margin-bottom:.75rem;">⚠️' + conflict_warn + '</div>' if conflict_warn else ''}
+        </div>""", unsafe_allow_html=True)
+
+        ga_col, gr_col = st.columns(2)
+        with ga_col:
+            if st.button("✅ Aceitar e Salvar", key="goal_accept", use_container_width=True, type="primary"):
+                from database import add_goal
+                add_goal(goal_pending)
+                st.session_state.pending_goal = None
+                hist = st.session_state.ai_history.get("ironbot", [])
+                hist.append({"role": "assistant",
+                             "content": f"✅ Meta **{goal_pending['name']}** salva! Acesse **Metas** para acompanhar o progresso.",
+                             "tools_used": []})
+                st.session_state.ai_history["ironbot"] = hist
+                st.session_state.page = "goals"
+                st.rerun()
+        with gr_col:
+            if st.button("❌ Rejeitar", key="goal_reject", use_container_width=True, type="secondary"):
+                hist = st.session_state.ai_history.get("ironbot", [])
+                hist.append({"role": "assistant",
+                             "content": f"Tudo bem, a meta **{goal_pending['name']}** foi descartada. Quer ajustar algo?",
+                             "tools_used": []})
+                st.session_state.ai_history["ironbot"] = hist
+                st.session_state.pending_goal = None
+                st.rerun()
+
+    # ── NUTRITION APPROVAL CARD ───────────────────────────────────────────
+    nutrition_pending = st.session_state.get("pending_nutrition")
+    if nutrition_pending:
+        st.markdown(f"""
+        <div style="border:2px solid #2ed573;border-radius:16px;padding:1.5rem;
+                    background:rgba(46,213,115,.04);margin-top:1rem;">
+          <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;">
+            <div style="font-size:1.8rem;">🥗</div>
+            <div>
+              <div style="font-size:1.1rem;font-weight:900;color:#2ed573;">{nutrition_pending['meal']}</div>
+              <div style="color:#a8a8a8;font-size:.8rem;margin-top:.15rem;">Refeição · aguardando sua aprovação</div>
+            </div>
+          </div>
+          <div style="background:#0d0d0d;border:1px solid #1e1e1e;border-radius:10px;
+                      padding:.75rem 1rem;margin-bottom:1rem;">
+            <div style="display:flex;justify-content:space-between;padding:.35rem 0;border-bottom:1px solid #1e1e1e;">
+              <span style="color:#888;font-size:.82rem;">Tipo</span>
+              <span style="color:#e0e0e0;font-size:.85rem;">{nutrition_pending.get('type','Lanche')}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:.35rem 0;border-bottom:1px solid #1e1e1e;">
+              <span style="color:#888;font-size:.82rem;">Calorias</span>
+              <span style="color:#2ed573;font-size:.85rem;font-weight:700;">{nutrition_pending.get('kcal',0)} kcal</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:.35rem 0;border-bottom:1px solid #1e1e1e;">
+              <span style="color:#888;font-size:.82rem;">Proteína</span>
+              <span style="color:#e0e0e0;font-size:.85rem;">{nutrition_pending.get('prot',0)}g</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:.35rem 0;border-bottom:1px solid #1e1e1e;">
+              <span style="color:#888;font-size:.82rem;">Carboidrato</span>
+              <span style="color:#e0e0e0;font-size:.85rem;">{nutrition_pending.get('carb',0)}g</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:.35rem 0;">
+              <span style="color:#888;font-size:.82rem;">Gordura</span>
+              <span style="color:#e0e0e0;font-size:.85rem;">{nutrition_pending.get('fat',0)}g</span>
             </div>
           </div>
         </div>""", unsafe_allow_html=True)
 
-        # Messages container
-        chat_container = st.container()
-        with chat_container:
-            if not hist:
-                # Welcome message
-                st.markdown(f"""
-                <div class="chat-bubble-ai">
-                  <div class="ai-msg-text">
-                    <strong style="color:{agent['color']};">Olá! Sou {agent['name']}.</strong><br><br>
-                    {agent['description']}<br><br>
-                    Posso <strong>criar planos de treino, registrar metas, analisar seu progresso</strong> e muito mais —
-                    tudo diretamente no seu app.<br><br>
-                    Como posso te ajudar hoje?
-                  </div>
-                </div>""", unsafe_allow_html=True)
-
-            for msg in hist:
-                if msg["role"] == "user":
-                    st.markdown(f'<div class="chat-bubble-user">{msg["content"]}</div>', unsafe_allow_html=True)
-                elif msg["role"] == "assistant":
-                    # Tool calls summary
-                    if msg.get("tools_used"):
-                        tools_html = "".join(
-                            f'<span class="tool-chip">{t["icon"]} {t["label"]}</span>'
-                            for t in msg["tools_used"]
-                        )
-                        with st.expander(f"🔧 {len(msg['tools_used'])} ação(ões) executada(s)", expanded=False):
-                            for t in msg["tools_used"]:
-                                st.markdown(f"""
-                                <div style="background:#0d0d0d;border:1px solid #1e1e1e;border-radius:10px;
-                                  padding:.75rem 1rem;margin-bottom:.5rem;">
-                                  <div style="color:{agent['color']};font-weight:700;font-size:.85rem;margin-bottom:.4rem;">
-                                    {t['icon']} {t['label']}
-                                  </div>
-                                  <div style="color:#888;font-size:.78rem;white-space:pre-wrap;font-family:monospace;">
-                                    {t['result'][:500]}{'...' if len(t['result'])>500 else ''}
-                                  </div>
-                                </div>""", unsafe_allow_html=True)
-                    st.markdown(f"""
-                    <div class="chat-bubble-ai">
-                      <div class="ai-msg-text">{msg['content']}</div>
-                    </div>""", unsafe_allow_html=True)
-
-        # ── INPUT ──────────────────────────────────────────────────────────────
-        st.markdown('<div style="height:1rem;"></div>', unsafe_allow_html=True)
-
-        # Quick prompts
-        quick = {
-            "athena":   ["📊 Análise completa", "📋 Cria um plano pra mim", "🎯 Sugere metas"],
-            "zeus":     ["💪 Avalia meu treino", "📋 Monte meu programa", "🔥 Dica de hoje"],
-            "hercules": ["⚡ Plano de força", "📈 Minha progressão", "🏋️ Programa PPL"],
-            "apollo":   ["🍽️ O que comi hoje?", "🥗 Sugere refeição", "📊 Avalia minha dieta"],
-            "oracle":   ["🔍 Analisa meu histórico", "⚠️ Meus pontos fracos", "📈 Tendências"],
-        }
-        prompts = quick.get(st.session_state.ai_agent, [])
-        qcols = st.columns(len(prompts))
-        clicked_prompt = None
-        for i, (col, p) in enumerate(zip(qcols, prompts)):
-            if col.button(p, key=f"qp_{st.session_state.ai_agent}_{i}", type="secondary", use_container_width=True):
-                clicked_prompt = p.split(" ", 1)[1] if " " in p else p
-
-        # Text input
-        user_input = st.chat_input(f"Fale com {agent['name']}... (ex: cria um plano push pull legs para mim)")
-
-        final_input = clicked_prompt or user_input
-
-        # ── PROCESS MESSAGE ───────────────────────────────────────────────────
-        if final_input and not st.session_state.ai_thinking:
-            st.session_state.ai_thinking = True
-
-            # Add user message to history
-            hist.append({"role": "user", "content": final_input})
-            st.session_state.ai_history[st.session_state.ai_agent] = hist
-
-            # Display user message immediately
-            st.markdown(f'<div class="chat-bubble-user">{final_input}</div>', unsafe_allow_html=True)
-
-            # Processing UI
-            with st.container():
-                thinking_ph = st.empty()
-                thinking_ph.markdown(f"""
-                <div class="chat-bubble-ai" style="border-left-color:{agent['color']};">
-                  <div class="thinking-dots">● ● ●</div>
-                  <div style="color:#929292;font-size:.75rem;margin-top:.3rem;">{agent['name']} está processando...</div>
-                </div>""", unsafe_allow_html=True)
-
-                tool_ph = st.empty()
-                response_ph = st.empty()
-
-                try:
-                    # Run agent — streams final response directly into response_ph
-                    response_text, tool_log = run_agent(
-                        st.session_state.ai_agent,
-                        final_input,
-                        [m for m in hist[:-1] if m["role"] in ("user","assistant")],
-                        tool_placeholder=tool_ph,
-                        response_placeholder=response_ph,
-                    )
-
-                    # Clear thinking/tool indicators
-                    thinking_ph.empty()
-                    tool_ph.empty()
-
-                    # Show tool summary if any tools were used
-                    if tool_log:
-                        tools_html = "".join(f'<span class="tool-chip">{t["icon"]} {t["label"]}</span>' for t in tool_log)
-                        st.markdown(f'<div style="margin:.5rem 0;">{tools_html}</div>', unsafe_allow_html=True)
-
-                        with st.expander(f"🔧 {len(tool_log)} ação(ões) executada(s)", expanded=False):
-                            for t in tool_log:
-                                st.markdown(f"""
-                                <div style="background:#0d0d0d;border:1px solid #1e1e1e;border-radius:10px;
-                                  padding:.75rem 1rem;margin-bottom:.5rem;">
-                                  <div style="color:{agent['color']};font-weight:700;font-size:.85rem;margin-bottom:.4rem;">
-                                    {t['icon']} {t['label']}
-                                  </div>
-                                  <div style="color:#888;font-size:.78rem;white-space:pre-wrap;font-family:monospace;">
-                                    {t['result'][:600]}{'...' if len(t['result'])>600 else ''}
-                                  </div>
-                                </div>""", unsafe_allow_html=True)
-
-                    # response_ph already rendered by _stream_to_ph — no extra display needed
-
-                    # Save to history
-                    hist.append({
-                        "role": "assistant",
-                        "content": response_text,
-                        "tools_used": tool_log,
-                    })
-                    st.session_state.ai_history[st.session_state.ai_agent] = hist
-
-                except Exception as e:
-                    thinking_ph.empty()
-                    st.error(f"Erro: {e}")
-                finally:
-                    st.session_state.ai_thinking = False
-
-        # ── PLAN APPROVAL CARD ────────────────────────────────────────────────
-        plan = st.session_state.get("pending_plan")
-        if plan:
-            exercises = plan.get("exercises", [])
-            exs_html = "".join(
-                f'<div style="display:flex;justify-content:space-between;padding:.45rem 0;'
-                f'border-bottom:1px solid #1e1e1e;">'
-                f'<span style="color:#e0e0e0;font-size:.88rem;">{e["name"]}</span>'
-                f'<span style="color:#888;font-size:.82rem;">'
-                f'{e.get("sets",3)}×{e.get("reps_target",10)} '
-                f'{"@ " + str(e.get("weight",0)) + "kg" if e.get("weight",0) else ""}'
-                f'</span></div>'
-                for e in exercises
-            )
-            st.markdown(f"""
-            <div style="border:2px solid #c8ff00;border-radius:16px;padding:1.5rem;
-                        background:rgba(200,255,0,.04);margin-top:1rem;">
-              <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;">
-                <div style="font-size:1.8rem;">📋</div>
-                <div>
-                  <div style="font-size:1.1rem;font-weight:900;color:#c8ff00;">{plan['name']}</div>
-                  <div style="color:#a8a8a8;font-size:.8rem;margin-top:.15rem;">{len(exercises)} exercícios · aguardando sua aprovação</div>
-                </div>
-              </div>
-              <div style="background:#0d0d0d;border:1px solid #1e1e1e;border-radius:10px;
-                          padding:.75rem 1rem;margin-bottom:1rem;">
-                {exs_html if exs_html else '<div style="color:#a0a0a0;font-size:.85rem;">Sem exercícios detalhados.</div>'}
-              </div>
-            </div>""", unsafe_allow_html=True)
-
-            fb_col, _ = st.columns([3, 1])
-            with fb_col:
-                feedback = st.text_input(
-                    "Sugestão de modificação (opcional)",
-                    placeholder="Ex: adiciona mais exercícios de costas, troca por exercícios sem equipamento...",
-                    key="plan_feedback_input",
-                    label_visibility="collapsed",
-                )
-
-            a_col, m_col, r_col = st.columns(3)
-            with a_col:
-                if st.button("✅ Aceitar e Salvar", key="plan_accept", use_container_width=True, type="primary"):
-                    from database import add_plan
-                    add_plan(plan)
-                    st.session_state.pending_plan = None
-                    st.session_state.plan_feedback = ""
-                    agent_key = st.session_state.ai_agent
-                    hist = st.session_state.ai_history.get(agent_key, [])
-                    hist.append({"role": "assistant", "content": f"✅ Plano **{plan['name']}** salvo com sucesso! Acesse a aba **Planos** para usá-lo.", "tools_used": []})
-                    st.session_state.ai_history[agent_key] = hist
-                    st.success(f"Plano '{plan['name']}' salvo nos seus treinos!")
-                    st.rerun()
-            with m_col:
-                if st.button("✏️ Modificar", key="plan_modify", use_container_width=True, type="secondary"):
-                    mod_text = feedback or st.session_state.get("plan_feedback_input", "")
-                    if mod_text.strip():
-                        agent_key = st.session_state.ai_agent
-                        hist = st.session_state.ai_history.get(agent_key, [])
-                        modify_msg = f"Modifique o plano '{plan['name']}' com o seguinte ajuste: {mod_text}"
-                        st.session_state.pending_plan = None
-                        hist.append({"role": "user", "content": modify_msg})
-                        st.session_state.ai_history[agent_key] = hist
-                        st.session_state.ai_thinking = False
-                        st.rerun()
-                    else:
-                        st.warning("Descreva o que quer modificar no campo acima.")
-            with r_col:
-                if st.button("❌ Rejeitar", key="plan_reject", use_container_width=True, type="secondary"):
-                    agent_key = st.session_state.ai_agent
-                    hist = st.session_state.ai_history.get(agent_key, [])
-                    hist.append({"role": "assistant", "content": f"Entendido, o plano **{plan['name']}** foi descartado. Me diga o que prefere e crio outro!", "tools_used": []})
-                    st.session_state.ai_history[agent_key] = hist
-                    st.session_state.pending_plan = None
-                    st.rerun()
+        na_col, nr_col = st.columns(2)
+        with na_col:
+            if st.button("✅ Aceitar e Registrar", key="nutrition_accept", use_container_width=True, type="primary"):
+                from database import add_nutrition
+                add_nutrition(nutrition_pending)
+                st.session_state.pending_nutrition = None
+                hist = st.session_state.ai_history.get("ironbot", [])
+                hist.append({"role": "assistant",
+                             "content": f"✅ **{nutrition_pending['meal']}** registrado! Acesse **Nutrição** para ver o diário de hoje.",
+                             "tools_used": []})
+                st.session_state.ai_history["ironbot"] = hist
+                st.session_state.page = "nutrition"
+                st.rerun()
+        with nr_col:
+            if st.button("❌ Rejeitar", key="nutrition_reject", use_container_width=True, type="secondary"):
+                hist = st.session_state.ai_history.get("ironbot", [])
+                hist.append({"role": "assistant",
+                             "content": f"Ok, **{nutrition_pending['meal']}** foi descartado. Quer corrigir alguma informação?",
+                             "tools_used": []})
+                st.session_state.ai_history["ironbot"] = hist
+                st.session_state.pending_nutrition = None
+                st.rerun()
